@@ -1,0 +1,210 @@
+//
+//  ViewController.swift
+//  NBC_Ch3_Advance
+//
+//  Created by 최규현 on 5/12/25.
+//
+
+import UIKit
+import SnapKit
+import RxSwift
+
+// MARK: - SearchViewController
+class SearchViewController: UIViewController {
+    
+    // MARK: - Property
+    private let searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "검색할 책 제목"
+        
+        return searchBar
+    }()
+    
+    private lazy var searchListCollectionView: UICollectionView = {
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: setCollectionViewLayoutForSection())
+        collectionView.register(SearchListCell.self, forCellWithReuseIdentifier: SearchListCell.identifier)
+        collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: HistoryCell.identifier)
+        collectionView.register(HeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderView.identifier)
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        
+        return collectionView
+    }()
+    
+}
+
+// MARK: - Lifecycle
+extension SearchViewController {
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.navigationController?.navigationBar.isHidden = true
+        setupUI()
+    }
+    
+}
+
+// MARK: - Method
+extension SearchViewController {
+    
+    private func setCollectionViewLayoutForSection() -> UICollectionViewCompositionalLayout {
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
+            
+            guard let section = Section(rawValue: sectionIndex) else { return nil }
+            
+            switch section {
+            case .history: return self.historyCollectionViewLayout()
+            case .search: return self.searchCollectionViewLayout()
+            }
+        }
+        
+        return layout
+    }
+    
+    private func historyCollectionViewLayout() -> NSCollectionLayoutSection {
+        let itemwidth = self.searchListCollectionView.bounds.width / 5
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemwidth),
+                                              heightDimension: .absolute(itemwidth))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        // 동그란 모양 = (top + bottom) == (leading + trailing)
+        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 5, bottom: 10, trailing: 5)
+        
+        // (item의 height) + (inset의 top + bottom)
+        let height = itemSize.heightDimension.dimension + (item.contentInsets.top + item.contentInsets.bottom)
+        
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                               heightDimension: .absolute(height))
+        
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        section.orthogonalScrollingBehavior = .continuous
+        
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                heightDimension: .absolute(50))
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: headerSize,
+            elementKind: UICollectionView.elementKindSectionHeader,
+            alignment: .top
+        )
+        
+        section.boundarySupplementaryItems = [header]
+        
+        return section
+    }
+    
+    private func searchCollectionViewLayout() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                              heightDimension: .fractionalHeight(1.0))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                               heightDimension: .absolute(60))
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 5
+        
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                heightDimension: .absolute(50))
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: headerSize,
+            elementKind: UICollectionView.elementKindSectionHeader,
+            alignment: .top
+        )
+        
+        section.boundarySupplementaryItems = [header]
+        
+        return section
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = .white
+        
+        [searchBar, searchListCollectionView]
+            .forEach { view.addSubview($0) }
+        
+        searchBar.snp.makeConstraints {
+            $0.height.equalTo(40)
+            $0.leading.trailing.equalToSuperview().inset(12)
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        searchListCollectionView.snp.makeConstraints {
+            $0.top.equalTo(searchBar.snp.bottom).offset(12)
+            $0.leading.trailing.equalToSuperview().inset(16)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
+        }
+    }
+    
+}
+
+// MARK: - CollectionViewDelegate
+extension SearchViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        self.present(DetailViewController(), animated: true)
+    }
+}
+
+// MARK: - CollectionViewDataSource
+extension SearchViewController: UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderView.identifier, for: indexPath) as? HeaderView else { return UICollectionReusableView() }
+        
+        let section = Section.allCases[indexPath.section]
+        header.setText(text: section.title)
+        
+        return header
+    }
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return Section.allCases.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        switch Section(rawValue: section) {
+        case .history: return 10
+        case .search: return 10
+        case .none: return 0
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        switch Section(rawValue: indexPath.section) {
+        case .history:
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else { return UICollectionViewCell() }
+            cell.historySetText(title: "책 이름")
+            
+            return cell
+            
+        case .search:
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
+            
+            cell.searchSetText(title: "타이틀", writer: "작가", price: "금액")
+            
+            return cell
+            
+        case .none:
+            return UICollectionViewCell()
+        }
+        
+    }
+    
+}
+
+// MARK: - CaseIterable
+enum Section: Int, CaseIterable {
+    case history
+    case search
+    
+    var title: String {
+        switch self {
+        case .history: return "최근 본 책"
+        case .search: return "검색 결과"
+        }
+    }
+}

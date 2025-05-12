@@ -1,0 +1,88 @@
+//
+//  SearchListCell.swift
+//  NBC_Ch3_Advance
+//
+//  Created by 최규현 on 5/12/25.
+//
+
+import UIKit
+import SnapKit
+
+class SearchListCell: UICollectionViewCell {
+    
+    // MARK: - Property
+    static let identifier = "SearchListCell"
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 22)
+        label.textColor = .black
+        
+        return label
+    }()
+    
+    private let writerLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .gray
+        
+        return label
+    }()
+    
+    private let priceLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 22)
+        label.textColor = .black
+        
+        return label
+    }()
+    
+    // MARK: - Initialize
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        setupUI()
+    }
+    
+    override func prepareForReuse() {
+        titleLabel.text = nil
+        writerLabel.text = nil
+        priceLabel.text = nil
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Method
+    func searchSetText(title: String, writer: String, price: String) {
+        titleLabel.text = title
+        writerLabel.text = writer
+        priceLabel.text = price
+    }
+    
+    private func setupUI() {
+        [titleLabel, writerLabel, priceLabel].forEach {
+            contentView.addSubview($0)
+        }
+        
+        contentView.backgroundColor = .white
+        contentView.layer.borderColor = UIColor.black.cgColor
+        contentView.layer.borderWidth = 0.3
+        
+        titleLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().inset(12)
+        }
+        
+        priceLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.trailing.equalToSuperview().inset(12)
+        }
+        
+        writerLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalTo(contentView.snp.centerX).offset(16)
+        }
+    }
+}
