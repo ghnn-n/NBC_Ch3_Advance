@@ -67,7 +67,7 @@ class DetailViewController: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         button.backgroundColor = .green
-        button.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
         
         return button
     }()
@@ -78,7 +78,7 @@ class DetailViewController: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         button.backgroundColor = .gray
-        button.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
         
         return button
     }()
@@ -177,11 +177,11 @@ extension DetailViewController {
         }
     }
     
-    @objc private func addButtonTapped(_ sender: UIButton) {
-        
-    }
-    
-    @objc private func cancelButtonTapped(_ sender: UIButton) {
-        
+    @objc private func buttonTapped(_ sender: UIButton) {
+        if sender == self.addButton {
+            
+        } else {
+            self.dismiss(animated: true)
+        }
     }
 }
