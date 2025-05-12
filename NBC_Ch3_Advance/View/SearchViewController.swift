@@ -20,17 +20,6 @@ class SearchViewController: UIViewController {
         return searchBar
     }()
     
-//    private lazy var historyCollectionView: UICollectionView = {
-//        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: historyCollectionViewLayout())
-//        collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: HistoryCell.identifier)
-//        collectionView.register(HeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderView.identifier)
-//        
-//        collectionView.dataSource = self
-//        collectionView.delegate = self
-//        
-//        return collectionView
-//    }()
-    
     private lazy var searchListCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: setCollectionViewLayoutForSection())
         collectionView.register(SearchListCell.self, forCellWithReuseIdentifier: SearchListCell.identifier)
@@ -51,6 +40,7 @@ extension SearchViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.navigationController?.navigationBar.isHidden = true
         setupUI()
     }
     
@@ -141,12 +131,6 @@ extension SearchViewController {
             $0.centerX.equalToSuperview()
             $0.top.equalTo(view.safeAreaLayoutGuide)
         }
-        
-//        historyCollectionView.snp.makeConstraints {
-//            $0.height.equalTo(80)
-//            $0.top.equalTo(searchBar.snp.bottom).offset(20)
-//            $0.leading.trailing.equalToSuperview().inset(16)
-//        }
         
         searchListCollectionView.snp.makeConstraints {
             $0.top.equalTo(searchBar.snp.bottom).offset(12)
