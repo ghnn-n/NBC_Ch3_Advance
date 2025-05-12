@@ -34,6 +34,7 @@ class SearchViewController: UIViewController {
     private lazy var searchListCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: setCollectionViewLayoutForSection())
         collectionView.register(SearchListCell.self, forCellWithReuseIdentifier: SearchListCell.identifier)
+        collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: HistoryCell.identifier)
         collectionView.register(HeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderView.identifier)
         
         collectionView.dataSource = self
@@ -188,15 +189,17 @@ extension SearchViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
         
         switch Section(rawValue: indexPath.section) {
         case .history:
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else { return UICollectionViewCell() }
             cell.historySetText(title: "책 이름")
             
             return cell
             
         case .search:
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
+            
             cell.searchSetText(title: "타이틀", writer: "작가", price: "금액")
             
             return cell
