@@ -12,6 +12,15 @@ import SnapKit
 // MARK: - DetailViewController
 class DetailViewController: UIViewController {
     
+    private let scrollView = UIScrollView()
+    
+    private let contentView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        
+        return view
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .bold)
@@ -47,16 +56,17 @@ class DetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 8)
         label.textColor = .black
+        label.numberOfLines = 0
         
         return label
     }()
     
     private lazy var addButton: UIButton = {
         let button = UIButton()
-        button.setTitle("X", for: .normal)
+        button.setTitle("담기", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
-        button.backgroundColor = .gray
+        button.backgroundColor = .green
         button.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
         
         return button
@@ -64,10 +74,10 @@ class DetailViewController: UIViewController {
     
     private lazy var cancelButton: UIButton = {
         let button = UIButton()
-        button.setTitle("담기", for: .normal)
+        button.setTitle("X", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
-        button.backgroundColor = .green
+        button.backgroundColor = .gray
         button.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         
         return button
@@ -80,7 +90,8 @@ extension DetailViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
+        setupUI()
+        test()
     }
     
 }
@@ -88,13 +99,59 @@ extension DetailViewController {
 // MARK: - Method
 extension DetailViewController {
     
+    private func test() {
+        titleLabel.text = "TEST"
+        writerLabel.text = "TEST"
+        imageView.backgroundColor = .green
+        priceLabel.text = "TEST"
+        detailLabel.text = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST"
+    }
+    
     private func setupUI() {
-        [titleLabel, writerLabel, imageView, priceLabel, detailLabel, addButton, cancelButton]
+        view.backgroundColor = .white
+        let buttonHeight: CGFloat = 60
+        
+        [titleLabel, writerLabel, imageView, priceLabel, detailLabel]
+            .forEach { contentView.addSubview($0) }
+        
+        scrollView.addSubview(contentView)
+        
+        [scrollView, addButton, cancelButton]
             .forEach { view.addSubview($0) }
+        
+        [addButton, cancelButton].forEach{
+            $0.layer.cornerRadius = buttonHeight / 3
+        }
+        
+        cancelButton.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(16)
+            $0.leading.equalToSuperview().inset(16)
+            $0.width.equalTo(view.bounds.width / 5)
+            $0.height.equalTo(buttonHeight)
+        }
+        
+        addButton.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(16)
+            $0.leading.equalTo(cancelButton.snp.trailing).offset(16)
+            $0.trailing.equalToSuperview().inset(16)
+            $0.height.equalTo(cancelButton)
+        }
+        
+        scrollView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(view.frame.width - 20)
+            $0.top.equalToSuperview()
+            $0.bottom.equalTo(cancelButton.snp.top).offset(-20)
+        }
+        
+        contentView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.width.equalTo(scrollView)
+        }
         
         titleLabel.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.top.equalToSuperview().inset(20)
         }
         
         writerLabel.snp.makeConstraints {
@@ -104,6 +161,19 @@ extension DetailViewController {
         
         imageView.snp.makeConstraints {
             $0.top.equalTo(writerLabel.snp.bottom).offset(12)
+            $0.leading.trailing.equalToSuperview().inset(50)
+            $0.height.equalTo(view.bounds.height / 2 - 30)
+        }
+        
+        priceLabel.snp.makeConstraints {
+            $0.top.equalTo(imageView.snp.bottom).offset(12)
+            $0.centerX.equalToSuperview()
+        }
+        
+        detailLabel.snp.makeConstraints {
+            $0.top.equalTo(priceLabel.snp.bottom).offset(16)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.bottom.equalToSuperview()
         }
     }
     
