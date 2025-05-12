@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import SnapKit
 
 // MARK: - TabBarController
 class TabBarController: UITabBarController {
@@ -21,7 +20,7 @@ extension TabBarController {
         
       
         setVC()
-        setup()
+        configure()
     }
     
 }
@@ -29,7 +28,7 @@ extension TabBarController {
 // MARK: - Method
 extension TabBarController {
     
-    private func setup() {
+    private func configure() {
         let font = UIFont.systemFont(ofSize: 20)
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -50,16 +49,15 @@ extension TabBarController {
     private func setVC() {
         
         viewControllers = [
-            createVC(VC: SearchViewController(), title: "검색", tag: 0),
-            createVC(VC: MyBookViewController(), title: "담은 책 리스트", tag: 1)
+            createVC(VC: SearchViewController(), title: "검색"),
+            createVC(VC: MyBookViewController(), title: "담은 책 리스트")
         ]
         
     }
     
-    private func createVC(VC: UIViewController, title: String, tag: Int) -> UIViewController {
+    private func createVC(VC: UIViewController, title: String) -> UIViewController {
         let nav = UINavigationController(rootViewController: VC)
         nav.tabBarItem.title = title
-        nav.tabBarItem.tag = tag
         
         return nav
     }
