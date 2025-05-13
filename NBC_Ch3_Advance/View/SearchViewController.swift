@@ -13,9 +13,14 @@ import RxSwift
 class SearchViewController: UIViewController {
     
     // MARK: - Property
-    private let searchBar: UISearchBar = {
+    private let disposeBag = DisposeBag()
+    private let viewModel = MainViewModel()
+    private var searchData = [Book]()
+    
+    private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = "검색할 책 제목"
+        searchBar.searchTextField.addTarget(self, action: #selector(getSearch), for: .primaryActionTriggered)
         
         return searchBar
     }()
@@ -42,12 +47,31 @@ extension SearchViewController {
         
         self.navigationController?.navigationBar.isHidden = true
         setupUI()
+        bind()
     }
     
 }
 
 // MARK: - Method
 extension SearchViewController {
+    
+    private func bind() {
+        viewModel.searchData
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { data in
+                self.searchData = data
+                self.searchListCollectionView.reloadData()
+            }, onError: { error in
+                print(error)
+            }).disposed(by: disposeBag)
+    }
+    
+    @objc private func getSearch(_ sender: UISearchBar) {
+        print("검색")
+        view.endEditing(true)
+        guard let text = sender.text else { return }
+        viewModel.searching(search: text)
+    }
     
     private func setCollectionViewLayoutForSection() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
@@ -166,8 +190,8 @@ extension SearchViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
-        case .history: return 10
-        case .search: return 10
+        case .history: return self.searchData.count
+        case .search: return self.searchData.count
         case .none: return 0
         }
     }
@@ -183,8 +207,16 @@ extension SearchViewController: UICollectionViewDataSource {
             
         case .search:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
-            
-            cell.searchSetText(title: "타이틀", writer: "작가", price: "금액")
+            var authors = ""
+            for author in self.searchData[indexPath.row].authors {
+                authors += author + ", "
+            }
+            if authors.suffix(2) == ", " {
+                authors.removeLast(2)
+            }
+            cell.searchSetText(title: self.searchData[indexPath.row].title,
+                               writer: authors,
+                               price: self.searchData[indexPath.row].price)
             
             return cell
             

@@ -126,7 +126,9 @@ extension MyBookViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
         
-        cell.searchSetText(title: "제목", writer: "작가", price: "금액")
+        cell.searchSetText(title: "제목",
+                           writer: "작가",
+                           price: 0)
         
         return cell
     }
