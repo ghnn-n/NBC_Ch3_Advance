@@ -25,6 +25,7 @@ class SearchListCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
         label.textColor = .gray
+        label.numberOfLines = 3
         
         return label
     }()
@@ -55,10 +56,10 @@ class SearchListCell: UICollectionViewCell {
     }
     
     // MARK: - Method
-    func searchSetText(title: String, writer: String, price: String) {
-        titleLabel.text = title
-        writerLabel.text = writer
-        priceLabel.text = price
+    func searchSetText(title: String, writer: String, price: Int) {
+            titleLabel.text = title
+            writerLabel.text = writer
+            priceLabel.text = "\(price)원"
     }
     
     private func setupUI() {
@@ -73,6 +74,7 @@ class SearchListCell: UICollectionViewCell {
         titleLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
             $0.leading.equalToSuperview().inset(12)
+            $0.trailing.equalTo(contentView.snp.centerX)
         }
         
         priceLabel.snp.makeConstraints {
@@ -82,7 +84,8 @@ class SearchListCell: UICollectionViewCell {
         
         writerLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
-            $0.leading.equalTo(contentView.snp.centerX).offset(16)
+            $0.leading.equalTo(contentView.snp.centerX)
+            $0.trailing.equalTo(contentView.snp.centerX).offset(80)
         }
     }
 }

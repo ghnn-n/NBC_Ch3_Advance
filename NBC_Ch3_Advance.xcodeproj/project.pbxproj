@@ -10,6 +10,7 @@
 		937E23672DD1921C0016E979 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 937E23662DD1921C0016E979 /* RxCocoa */; };
 		937E23692DD1921C0016E979 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 937E23682DD1921C0016E979 /* RxSwift */; };
 		937E236C2DD1922E0016E979 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 937E236B2DD1922E0016E979 /* SnapKit */; };
+		93AD945F2DD2EC6000ADA355 /* KakaoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 93AD945E2DD2EC6000ADA355 /* KakaoSDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				937E236C2DD1922E0016E979 /* SnapKit in Frameworks */,
+				93AD945F2DD2EC6000ADA355 /* KakaoSDK in Frameworks */,
 				937E23692DD1921C0016E979 /* RxSwift in Frameworks */,
 				937E23672DD1921C0016E979 /* RxCocoa in Frameworks */,
 			);
@@ -90,6 +92,7 @@
 				937E23662DD1921C0016E979 /* RxCocoa */,
 				937E23682DD1921C0016E979 /* RxSwift */,
 				937E236B2DD1922E0016E979 /* SnapKit */,
+				93AD945E2DD2EC6000ADA355 /* KakaoSDK */,
 			);
 			productName = NBC_Ch3_Advance;
 			productReference = 937E23322DD18C8F0016E979 /* NBC_Ch3_Advance.app */;
@@ -122,6 +125,7 @@
 			packageReferences = (
 				937E23652DD1921C0016E979 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				937E236A2DD1922E0016E979 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				93AD945D2DD2EC6000ADA355 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 937E23332DD18C8F0016E979 /* Products */;
@@ -371,6 +375,14 @@
 				minimumVersion = 5.7.1;
 			};
 		};
+		93AD945D2DD2EC6000ADA355 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -388,6 +400,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 937E236A2DD1922E0016E979 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		93AD945E2DD2EC6000ADA355 /* KakaoSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93AD945D2DD2EC6000ADA355 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
