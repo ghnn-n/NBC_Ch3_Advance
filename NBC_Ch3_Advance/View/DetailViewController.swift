@@ -15,6 +15,7 @@ class DetailViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: MainViewModel
     private var bookData: Book?
+    private var thumnailImage: UIImage?
     
     private let scrollView = UIScrollView()
     
@@ -135,11 +136,27 @@ extension DetailViewController {
         var author = data.authors
         if author.isEmpty { author = ["unknown"] }
         
-        self.titleLabel.text = data.title
-        self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
-        self.imageView.backgroundColor = .green
-        self.priceLabel.text = "\(data.price)원"
-        self.detailLabel.text = data.contents
+        // image 생성이 늦길래 이런 식으로 했는데 rxSwift에 더 좋은 방법이 있지 않을까
+        DispatchQueue.global(qos: .default).async {
+            self.getImage(url: data.thumbnail)
+        }
+        DispatchQueue.main.async {
+            self.titleLabel.text = data.title
+            self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
+            self.imageView.image = self.thumnailImage
+            self.priceLabel.text = "\(data.price)원"
+            self.detailLabel.text = data.contents
+        }
+    }
+    
+    private func getImage(url: String) {
+        viewModel.getImage(url: url)
+            .subscribe(onSuccess: { observer in
+                self.thumnailImage = observer
+            }, onFailure: { error in
+                print("DetailVC.getImage() failed: \(error)")
+            }).disposed(by: disposeBag)
+        
     }
     
     private func setupUI() {

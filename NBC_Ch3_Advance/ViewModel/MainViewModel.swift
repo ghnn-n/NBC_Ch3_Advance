@@ -7,6 +7,7 @@
 
 import Foundation
 import RxSwift
+import UIKit
 
 class MainViewModel {
     
@@ -41,6 +42,24 @@ class MainViewModel {
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)
         
+    }
+    
+    func getImage(url: String) -> Single<UIImage> {
+        guard let url = URL(string: url) else {
+            return Single.error(NetworkError.invalidURL)
+        }
+        
+        return Single.create { observer in
+            let session = URLSession(configuration: .default)
+            session.dataTask(with: URLRequest(url: url)) { data, _, _ in
+                guard let data, let image = UIImage(data: data) else {
+                    return observer(.failure(NetworkError.noData))
+                }
+                
+                return observer(.success(image))
+            }.resume()
+            return Disposables.create()
+        }
     }
     
 }
