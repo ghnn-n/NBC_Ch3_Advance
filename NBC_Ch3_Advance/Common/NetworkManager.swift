@@ -14,10 +14,10 @@ class NetworkManager {
     
     private init() {}
     
-    func fetchData<T: Decodable>(url: URL) -> Single<T> {
+    func fetchData<T: Decodable>(request: URLRequest) -> Single<T> {
         return Single.create { observer in
             let session = URLSession(configuration: .default)
-            session.dataTask(with: URLRequest(url: url)) { data, response, error in
+            session.dataTask(with: request) { data, response, error in
                 
                 if let error {
                     return observer(.failure(error))

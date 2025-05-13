@@ -168,7 +168,8 @@ extension SearchViewController {
 // MARK: - CollectionViewDelegate
 extension SearchViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        self.present(DetailViewController(), animated: true)
+        viewModel.input.onNext(self.searchData[indexPath.row])
+        self.present(DetailViewController(viewModel: self.viewModel), animated: true)
     }
 }
 
@@ -207,15 +208,11 @@ extension SearchViewController: UICollectionViewDataSource {
             
         case .search:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
-            var authors = ""
-            for author in self.searchData[indexPath.row].authors {
-                authors += author + ", "
-            }
-            if authors.suffix(2) == ", " {
-                authors.removeLast(2)
-            }
+            var author = self.searchData[indexPath.row].authors
+            if author.isEmpty { author = ["unknown"] }
+            
             cell.searchSetText(title: self.searchData[indexPath.row].title,
-                               writer: authors,
+                               writer: author.count > 1 ? "\(author[0]) 등 \(author.count)인" : author[0],
                                price: self.searchData[indexPath.row].price)
             
             return cell

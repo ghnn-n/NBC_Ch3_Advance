@@ -12,6 +12,11 @@ import SnapKit
 // MARK: - DetailViewController
 class DetailViewController: UIViewController {
     
+    private let disposeBag = DisposeBag()
+    private let viewModel: MainViewModel
+    private var bookData: Book?
+    private var thumnailImage: UIImage?
+    
     private let scrollView = UIScrollView()
     
     private let contentView: UIView = {
@@ -33,6 +38,8 @@ class DetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
         label.textColor = .gray
+        label.textAlignment = .center
+        label.numberOfLines = 2
         
         return label
     }()
@@ -54,7 +61,7 @@ class DetailViewController: UIViewController {
     
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 8)
+        label.font = .systemFont(ofSize: 12)
         label.textColor = .black
         label.numberOfLines = 0
         
@@ -82,6 +89,17 @@ class DetailViewController: UIViewController {
         
         return button
     }()
+    
+    // MARK: - Initialize
+    init(viewModel: MainViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 // MARK: - Lifecycle
@@ -91,7 +109,7 @@ extension DetailViewController {
         super.viewDidLoad()
         
         setupUI()
-        test()
+        bind()
     }
     
 }
@@ -99,12 +117,46 @@ extension DetailViewController {
 // MARK: - Method
 extension DetailViewController {
     
-    private func test() {
-        titleLabel.text = "TEST"
-        writerLabel.text = "TEST"
-        imageView.backgroundColor = .green
-        priceLabel.text = "TEST"
-        detailLabel.text = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST"
+    private func bind() {
+        self.viewModel.output
+            .subscribe(onNext: { observer in
+                self.bookData = observer
+                self.getData(data: observer)
+            }, onError: { error in
+                print("DetailVC data load error: \(error)")
+            }).disposed(by: disposeBag)
+    }
+    
+    private func getData(data: Book?) {
+        guard let data else {
+            print("DetailVC.getData(): noDATA")
+            return
+        }
+        
+        var author = data.authors
+        if author.isEmpty { author = ["unknown"] }
+        
+        // image 생성이 늦길래 이런 식으로 했는데 rxSwift에 더 좋은 방법이 있지 않을까
+        DispatchQueue.global(qos: .default).async {
+            self.getImage(url: data.thumbnail)
+        }
+        DispatchQueue.main.async {
+            self.titleLabel.text = data.title
+            self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
+            self.imageView.image = self.thumnailImage
+            self.priceLabel.text = "\(data.price)원"
+            self.detailLabel.text = data.contents
+        }
+    }
+    
+    private func getImage(url: String) {
+        viewModel.getImage(url: url)
+            .subscribe(onSuccess: { observer in
+                self.thumnailImage = observer
+            }, onFailure: { error in
+                print("DetailVC.getImage() failed: \(error)")
+            }).disposed(by: disposeBag)
+        
     }
     
     private func setupUI() {
@@ -156,7 +208,7 @@ extension DetailViewController {
         
         writerLabel.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(12)
-            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(100)
         }
         
         imageView.snp.makeConstraints {

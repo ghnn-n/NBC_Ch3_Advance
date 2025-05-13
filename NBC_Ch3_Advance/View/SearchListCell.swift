@@ -85,7 +85,7 @@ class SearchListCell: UICollectionViewCell {
         writerLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
             $0.leading.equalTo(contentView.snp.centerX)
-            $0.trailing.equalTo(contentView.snp.centerX).offset(80)
+            $0.trailing.equalTo(contentView.snp.centerX).offset(72)
         }
     }
 }
