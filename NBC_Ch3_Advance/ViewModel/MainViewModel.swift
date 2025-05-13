@@ -18,12 +18,12 @@ class MainViewModel {
     
     func searching(search: String) {
         
-        guard let url = URL(string: "https://dapi.kakao.com/v3/search/book?query=" + search) else {
+        guard let url = URL(string: "https://dapi.kakao.com/v3/search/book?query=\(search)") else {
             searchData.onError(NetworkError.invalidURL)
             return
         }
         var request = URLRequest(url: url)
-        request.allHTTPHeaderFields = ["Authorization": "KakaoAK aa7f9e6d76e6ca95a3590fef4162a8a9"]
+        request.allHTTPHeaderFields = ["Authorization": "KakaoAK \(myAPI)"]
         
         self.fetch(request: request) { (result: SearchResponse?) in
             guard let result else {
