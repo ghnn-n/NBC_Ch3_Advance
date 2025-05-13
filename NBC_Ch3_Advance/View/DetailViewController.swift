@@ -12,6 +12,10 @@ import SnapKit
 // MARK: - DetailViewController
 class DetailViewController: UIViewController {
     
+    private let disposeBag = DisposeBag()
+    private let viewModel: MainViewModel
+    private var bookData: Book?
+    
     private let scrollView = UIScrollView()
     
     private let contentView: UIView = {
@@ -33,6 +37,8 @@ class DetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
         label.textColor = .gray
+        label.textAlignment = .center
+        label.numberOfLines = 2
         
         return label
     }()
@@ -54,7 +60,7 @@ class DetailViewController: UIViewController {
     
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 8)
+        label.font = .systemFont(ofSize: 12)
         label.textColor = .black
         label.numberOfLines = 0
         
@@ -82,6 +88,17 @@ class DetailViewController: UIViewController {
         
         return button
     }()
+    
+    // MARK: - Initialize
+    init(viewModel: MainViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 // MARK: - Lifecycle
@@ -91,7 +108,7 @@ extension DetailViewController {
         super.viewDidLoad()
         
         setupUI()
-        test()
+        bind()
     }
     
 }
@@ -99,12 +116,30 @@ extension DetailViewController {
 // MARK: - Method
 extension DetailViewController {
     
-    private func test() {
-        titleLabel.text = "TEST"
-        writerLabel.text = "TEST"
-        imageView.backgroundColor = .green
-        priceLabel.text = "TEST"
-        detailLabel.text = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST"
+    private func bind() {
+        self.viewModel.output
+            .subscribe(onNext: { observer in
+                self.bookData = observer
+                self.getData(data: observer)
+            }, onError: { error in
+                print("DetailVC data load error: \(error)")
+            }).disposed(by: disposeBag)
+    }
+    
+    private func getData(data: Book?) {
+        guard let data else {
+            print("DetailVC.getData(): noDATA")
+            return
+        }
+        
+        var author = data.authors
+        if author.isEmpty { author = ["unknown"] }
+        
+        self.titleLabel.text = data.title
+        self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
+        self.imageView.backgroundColor = .green
+        self.priceLabel.text = "\(data.price)원"
+        self.detailLabel.text = data.contents
     }
     
     private func setupUI() {
@@ -156,7 +191,7 @@ extension DetailViewController {
         
         writerLabel.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(12)
-            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(100)
         }
         
         imageView.snp.makeConstraints {
