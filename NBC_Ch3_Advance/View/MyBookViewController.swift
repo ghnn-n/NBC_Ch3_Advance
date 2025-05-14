@@ -69,7 +69,7 @@ extension MyBookViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
         self.favoriteBookData = FavoriteBookManager.shared.fetch()
         self.collectionView.reloadData()
     }
@@ -180,11 +180,8 @@ extension MyBookViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
         
-        guard let title = self.favoriteBookData[indexPath.row].title,
-              let authors = self.favoriteBookData[indexPath.row].authors else { return UICollectionViewCell() }
-        
-        cell.searchSetText(title: title,
-                           writer: authors,
+        cell.searchSetText(title: self.favoriteBookData[indexPath.row].title ?? "unknown",
+                           writer: self.favoriteBookData[indexPath.row].authors ?? "unknown",
                            price: Int(self.favoriteBookData[indexPath.row].price))
         
         return cell

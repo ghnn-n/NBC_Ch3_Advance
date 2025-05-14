@@ -19,10 +19,10 @@ class FavoriteBookManager {
     }
     
     func create(data: Book) throws {
+        guard checkSameContent(data: data) else { throw CoreDataError.haveSameBook }
+        
         guard let entity = NSEntityDescription.entity(forEntityName: FavoriteBook.entityName, in: self.container.viewContext) else { return }
         let newBook = NSManagedObject(entity: entity, insertInto: self.container.viewContext)
-        
-        guard checkSameContent(data: data) else { throw CoreDataError.haveSameBook }
         
         var authors = ""
         if data.authors.count > 1 {
