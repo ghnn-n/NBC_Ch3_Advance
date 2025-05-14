@@ -17,6 +17,8 @@ class HistoryCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 8)
         label.textColor = .black
+        label.textAlignment = .center
+        label.numberOfLines = 2
         
         return label
     }()
@@ -54,6 +56,7 @@ class HistoryCell: UICollectionViewCell {
         
         historyLabel.snp.makeConstraints {
             $0.center.equalToSuperview()
+            $0.width.equalToSuperview().inset(4)
         }
     }
 }

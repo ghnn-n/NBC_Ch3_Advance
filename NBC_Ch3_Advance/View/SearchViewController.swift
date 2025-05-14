@@ -16,6 +16,7 @@ class SearchViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel = MainViewModel()
     private var searchData = [Book]()
+    private var historyData = [Book]()
         
     lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
@@ -108,15 +109,17 @@ extension SearchViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous
         
-        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                                heightDimension: .absolute(50))
-        let header = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: headerSize,
-            elementKind: UICollectionView.elementKindSectionHeader,
-            alignment: .top
-        )
-        
-        section.boundarySupplementaryItems = [header]
+        if !self.historyData.isEmpty {
+            let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                    heightDimension: .absolute(50))
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: headerSize,
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            
+            section.boundarySupplementaryItems = [header]
+        }
         
         return section
     }
@@ -185,8 +188,18 @@ extension SearchViewController: CustomDelegate {
 // MARK: - CollectionViewDelegate
 extension SearchViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        viewModel.input.onNext(self.searchData[indexPath.row])
-        self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
+        switch Section(rawValue: indexPath.section) {
+        case .history:
+            viewModel.input.onNext(self.historyData[indexPath.row])
+            self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
+        case .search:
+            historyData.insert(searchData[indexPath.row], at: 0)
+            searchListCollectionView.reloadData()
+            viewModel.input.onNext(self.searchData[indexPath.row])
+            self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
+        case .none:
+            return
+        }
     }
 }
 
@@ -208,7 +221,7 @@ extension SearchViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
-        case .history: return self.searchData.count
+        case .history: return self.historyData.count
         case .search: return self.searchData.count
         case .none: return 0
         }
@@ -219,7 +232,8 @@ extension SearchViewController: UICollectionViewDataSource {
         switch Section(rawValue: indexPath.section) {
         case .history:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else { return UICollectionViewCell() }
-            cell.historySetText(title: "책 이름")
+            
+            cell.historySetText(title: self.historyData[indexPath.row].title)
             
             return cell
             
@@ -240,17 +254,19 @@ extension SearchViewController: UICollectionViewDataSource {
         
     }
     
-}
-
-// MARK: - CaseIterable
-enum Section: Int, CaseIterable {
-    case history
-    case search
-    
-    var title: String {
-        switch self {
-        case .history: return "최근 본 책"
-        case .search: return "검색 결과"
+    // MARK: - CaseIterable
+    enum Section: Int, CaseIterable {
+        case history
+        case search
+        
+        var title: String {
+            switch self {
+            case .history: return "최근 본 책"
+            case .search: return "검색 결과"
+            }
         }
     }
+    
 }
+
+
