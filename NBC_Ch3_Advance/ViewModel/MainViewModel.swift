@@ -37,9 +37,7 @@ class MainViewModel {
         
         NetworkManager.shared.fetchData(request: request)
             .subscribe(onSuccess: { (observer: SearchResponse) in
-                while !observer.meta.isEnd {
-                    self.searchData.onNext(observer.documents)
-                }
+                self.searchData.onNext(observer.documents)
             }, onFailure: { error in
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)
