@@ -13,7 +13,9 @@ import SnapKit
 class MyBookViewController: UIViewController {
     
     private let horizontalEdgesInset: CGFloat = 20
-    
+    private let viewModel = MainViewModel()
+    private var favoriteBookData = [FavoriteBook]()
+        
     private lazy var deleteButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = .systemFont(ofSize: 16)
@@ -69,6 +71,13 @@ extension MyBookViewController {
         setupUI()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.collectionView.reloadData()
+    }
+    
 }
 
 // MARK: - Method
@@ -112,23 +121,44 @@ extension MyBookViewController {
     }
 }
 
+// MARK: - CustomDelegate
+extension MyBookViewController: CustomDelegate {
+    func didTapAddButton(success: Bool) {
+        if success {
+            let alert = UIAlertController(title: "성공!", message: "담기를 완료했습니다.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
+            present(alert, animated: true)
+        } else {
+            let alert = UIAlertController(title: "실패", message: "같은 책이 이미 담겨 있습니다.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
+            present(alert, animated: true)
+        }
+    }
+}
+
 // MARK: - CollectionViewDelegate
 extension MyBookViewController: UICollectionViewDelegate {
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        viewModel.input.onNext(Book(from: self.favoriteBookData[indexPath.row]))
+        self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
+    }
 }
 
 // MARK: - CollectionViewDataSource
 extension MyBookViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        return favoriteBookData.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
         
-        cell.searchSetText(title: "제목",
-                           writer: "작가",
-                           price: 0)
+        guard let title = self.favoriteBookData[indexPath.row].title,
+              let authors = self.favoriteBookData[indexPath.row].authors else { return UICollectionViewCell() }
+        
+        cell.searchSetText(title: title,
+                           writer: authors,
+                           price: Int(self.favoriteBookData[indexPath.row].price))
         
         return cell
     }
