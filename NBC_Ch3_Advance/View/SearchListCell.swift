@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class SearchListCell: UICollectionViewCell {
+class SearchListCell: UICollectionViewListCell {
     
     // MARK: - Property
     static let identifier = "SearchListCell"

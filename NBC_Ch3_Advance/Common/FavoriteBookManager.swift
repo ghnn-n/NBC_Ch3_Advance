@@ -57,6 +57,26 @@ class FavoriteBookManager {
         }
     }
     
+    func deleteOne(item: String?) {
+        guard let item else { return }
+        
+        let fetch = FavoriteBook.fetchRequest()
+        fetch.predicate = NSPredicate(format: "isbn == %@", item)
+        
+        do {
+            let item = try self.container.viewContext.fetch(fetch)
+            
+            for data in item as [NSManagedObject] {
+                self.container.viewContext.delete(data)
+            }
+            
+            try self.container.viewContext.save()
+        } catch {
+            print(CoreDataError.deleteFailed)
+            return
+        }
+    }
+    
     func deleteAll() {
         do {
             let fetch = try self.container.viewContext.fetch(FavoriteBook.fetchRequest())
