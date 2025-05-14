@@ -172,6 +172,12 @@ extension SearchViewController {
         view.endEditing(true)
     }
     
+    private func addHistory(indexPath: IndexPath) {
+        if historyData.count >= 10 { historyData.removeLast() }
+        
+        historyData.insert(searchData[indexPath.row], at: 0)
+    }
+    
 }
 
 // MARK: - CustomDelegate
@@ -190,12 +196,12 @@ extension SearchViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section) {
         case .history:
-            viewModel.input.onNext(self.historyData[indexPath.row])
+            self.viewModel.input.onNext(self.historyData[indexPath.row])
             self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .search:
-            historyData.insert(searchData[indexPath.row], at: 0)
-            searchListCollectionView.reloadData()
-            viewModel.input.onNext(self.searchData[indexPath.row])
+            self.addHistory(indexPath: indexPath)
+            self.searchListCollectionView.reloadData()
+            self.viewModel.input.onNext(self.searchData[indexPath.row])
             self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .none:
             return
