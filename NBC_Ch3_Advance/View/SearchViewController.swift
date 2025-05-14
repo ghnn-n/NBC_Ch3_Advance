@@ -17,6 +17,7 @@ class SearchViewController: UIViewController {
     private let viewModel = MainViewModel()
     private var searchData = [Book]()
     private var historyData = [Book]()
+    private var searchedText = ""
         
     lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
@@ -50,7 +51,8 @@ extension SearchViewController {
         setupUI()
         bind()
         // 테스트용
-        viewModel.searching(search: "물 만난")
+        self.searchedText = "물 만난"
+        viewModel.searching(search: self.searchedText, isNewSearch: true)
     }
     
 }
@@ -62,18 +64,26 @@ extension SearchViewController {
         viewModel.searchData
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { data in
-                self.searchData = data
+                self.searchData.append(contentsOf: data)
                 self.searchListCollectionView.reloadData()
+                print("데이터 받아옴")
             }, onError: { error in
                 print(error)
             }).disposed(by: disposeBag)
     }
     
     @objc private func getSearch(_ sender: UISearchBar) {
-        print("검색")
-        view.endEditing(true)
-        guard let text = sender.text else { return }
-        viewModel.searching(search: text)
+        DispatchQueue.global(qos: .default).sync {
+            self.searchListCollectionView.scrollsToTop = true
+            view.endEditing(true)
+            self.searchData.removeAll()
+            self.searchListCollectionView.reloadData()
+            print("데이터 삭제")
+            guard let text = sender.text else { return }
+            self.searchedText = text
+            Thread.sleep(forTimeInterval: 1.0)
+            viewModel.searching(search: searchedText, isNewSearch: true)
+        }
     }
     
     private func setCollectionViewLayoutForSection() -> UICollectionViewCompositionalLayout {
@@ -207,6 +217,16 @@ extension SearchViewController: UICollectionViewDelegate {
             return
         }
     }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        let nowY = scrollView.contentOffset.y
+        let fullHeight = scrollView.contentSize.height
+        let frameHeight = scrollView.frame.height
+        
+        if nowY > fullHeight - frameHeight {
+            viewModel.searching(search: self.searchedText, isNewSearch: false)
+        }
+    }
 }
 
 // MARK: - CollectionViewDataSource
@@ -259,20 +279,17 @@ extension SearchViewController: UICollectionViewDataSource {
         }
         
     }
-    
-    // MARK: - CaseIterable
-    enum Section: Int, CaseIterable {
-        case history
-        case search
-        
-        var title: String {
-            switch self {
-            case .history: return "최근 본 책"
-            case .search: return "검색 결과"
-            }
-        }
-    }
-    
 }
 
-
+// MARK: - CaseIterable
+enum Section: Int, CaseIterable {
+    case history
+    case search
+    
+    var title: String {
+        switch self {
+        case .history: return "최근 본 책"
+        case .search: return "검색 결과"
+        }
+    }
+}

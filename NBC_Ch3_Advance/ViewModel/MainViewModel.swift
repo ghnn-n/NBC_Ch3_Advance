@@ -14,6 +14,8 @@ class MainViewModel {
     // MARK: - Property
     private let myAPI = "aa7f9e6d76e6ca95a3590fef4162a8a9"
     private let disposeBag = DisposeBag()
+    var isEnd = false
+    var page = 1
     
     let searchData = BehaviorSubject(value: [Book]())
     let input = BehaviorSubject<Book?>(value: nil)
@@ -25,9 +27,21 @@ class MainViewModel {
     }
     
     // MARK: - Method
-    func searching(search: String) {
+    func searching(search: String, isNewSearch: Bool) {
+        if isNewSearch {
+            self.page = 1
+            self.isEnd = false
+        } else {
+            self.page += 1
+        }
         
-        guard let url = URL(string: "https://dapi.kakao.com/v3/search/book?query=\(search)") else {
+        guard !self.isEnd else { return }
+        
+        var urlComponent = URLComponents(string: "https://dapi.kakao.com/v3/search/book")
+        urlComponent?.queryItems = [URLQueryItem(name: "query", value: search),
+                                    URLQueryItem(name: "page", value: String(page))]
+        
+        guard let url = urlComponent?.url else {
             searchData.onError(NetworkError.invalidURL)
             return
         }
@@ -38,6 +52,7 @@ class MainViewModel {
         NetworkManager.shared.fetchData(request: request)
             .subscribe(onSuccess: { (observer: SearchResponse) in
                 self.searchData.onNext(observer.documents)
+                self.isEnd = observer.meta.isEnd
             }, onFailure: { error in
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)
