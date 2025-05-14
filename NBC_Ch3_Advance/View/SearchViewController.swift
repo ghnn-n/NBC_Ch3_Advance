@@ -62,7 +62,7 @@ extension SearchViewController {
         viewModel.searchData
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { data in
-                self.searchData = data
+                self.searchData.append(contentsOf: data)
                 self.searchListCollectionView.reloadData()
             }, onError: { error in
                 print(error)
