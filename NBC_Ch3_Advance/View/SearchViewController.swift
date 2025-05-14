@@ -16,7 +16,7 @@ class SearchViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel = MainViewModel()
     private var searchData = [Book]()
-    
+        
     private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = "검색할 책 제목"
@@ -165,11 +165,26 @@ extension SearchViewController {
     
 }
 
+// MARK: - CustomDelegate
+extension SearchViewController: CustomDelegate {
+    func didTapAddButton(success: Bool) {
+        if success {
+            let alert = UIAlertController(title: "성공!", message: "담기를 완료했습니다.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
+            self.present(alert, animated: true)
+        } else {
+            let alert = UIAlertController(title: "실패", message: "같은 책이 이미 담겨 있습니다.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
+            self.present(alert, animated: true)
+        }
+    }
+}
+
 // MARK: - CollectionViewDelegate
 extension SearchViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         viewModel.input.onNext(self.searchData[indexPath.row])
-        self.present(DetailViewController(viewModel: self.viewModel), animated: true)
+        self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
     }
 }
 

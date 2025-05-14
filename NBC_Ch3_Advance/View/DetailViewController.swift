@@ -17,6 +17,8 @@ class DetailViewController: UIViewController {
     private var bookData: Book?
     private var thumnailImage: UIImage?
     
+    var delegate: CustomDelegate?
+    
     private let scrollView = UIScrollView()
     
     private let contentView: UIView = {
@@ -91,8 +93,9 @@ class DetailViewController: UIViewController {
     }()
     
     // MARK: - Initialize
-    init(viewModel: MainViewModel) {
+    init(viewModel: MainViewModel, delegate: CustomDelegate) {
         self.viewModel = viewModel
+        self.delegate = delegate
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -137,16 +140,18 @@ extension DetailViewController {
         if author.isEmpty { author = ["unknown"] }
         
         // image 생성이 늦길래 이런 식으로 했는데 rxSwift에 더 좋은 방법이 있지 않을까
-        DispatchQueue.global(qos: .default).async {
+        DispatchQueue.global(qos: .default).sync {
             self.getImage(url: data.thumbnail)
+            
+            DispatchQueue.main.async {
+                self.titleLabel.text = data.title
+                self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
+                self.imageView.image = self.thumnailImage
+                self.priceLabel.text = "\(data.price)원"
+                self.detailLabel.text = data.contents
+            }
         }
-        DispatchQueue.main.async {
-            self.titleLabel.text = data.title
-            self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
-            self.imageView.image = self.thumnailImage
-            self.priceLabel.text = "\(data.price)원"
-            self.detailLabel.text = data.contents
-        }
+        
     }
     
     private func getImage(url: String) {
@@ -157,6 +162,29 @@ extension DetailViewController {
                 print("DetailVC.getImage() failed: \(error)")
             }).disposed(by: disposeBag)
         
+    }
+    
+    @objc private func buttonTapped(_ sender: UIButton) {
+        if sender == self.addButton {
+            guard let bookData else { return }
+            var isSuccess = true
+            
+            do {
+                try FavoriteBookManager.shared.create(data: bookData)
+            } catch CoreDataError.haveSameBook {
+                print("같은 책이 있음")
+                isSuccess = false
+            } catch {
+                print("unknownError\(error)")
+                isSuccess = false
+            }
+            
+            self.dismiss(animated: true) {
+                self.delegate?.didTapAddButton(success: isSuccess)
+            }
+        } else {
+            self.dismiss(animated: true)
+        }
     }
     
     private func setupUI() {
@@ -226,14 +254,6 @@ extension DetailViewController {
             $0.top.equalTo(priceLabel.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview()
-        }
-    }
-    
-    @objc private func buttonTapped(_ sender: UIButton) {
-        if sender == self.addButton {
-            
-        } else {
-            self.dismiss(animated: true)
         }
     }
 }
