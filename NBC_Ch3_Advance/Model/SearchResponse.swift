@@ -6,7 +6,20 @@
 //
 
 struct SearchResponse: Decodable {
+    let meta: Meta
     let documents: [Book]
+}
+
+struct Meta: Decodable {
+    let isEnd: Bool
+    let pageableCount: Int
+    let totalCount: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case isEnd = "is_end"
+        case pageableCount = "pageable_count"
+        case totalCount = "total_count"
+    }
 }
 
 struct Book: Decodable {
