@@ -70,7 +70,6 @@ class SearchListCell: UICollectionViewListCell {
         contentView.backgroundColor = .white
         contentView.layer.borderColor = UIColor.black.cgColor
         contentView.layer.borderWidth = 0.3
-        contentView.layer.cornerRadius = 8
         
         titleLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
