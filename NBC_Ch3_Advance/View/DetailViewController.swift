@@ -167,18 +167,21 @@ extension DetailViewController {
     @objc private func buttonTapped(_ sender: UIButton) {
         if sender == self.addButton {
             guard let bookData else { return }
+            var isSuccess = true
+            
             do {
                 try FavoriteBookManager.shared.create(data: bookData)
-                delegate?.didTapAddButton(success: true)
             } catch CoreDataError.haveSameBook {
                 print("같은 책이 있음")
-                delegate?.didTapAddButton(success: false)
+                isSuccess = false
             } catch {
                 print("unknownError\(error)")
-                delegate?.didTapAddButton(success: false)
+                isSuccess = false
             }
             
-            self.dismiss(animated: true)
+            self.dismiss(animated: true) {
+                self.delegate?.didTapAddButton(success: isSuccess)
+            }
         } else {
             self.dismiss(animated: true)
         }
