@@ -167,16 +167,12 @@ extension SearchViewController {
 
 // MARK: - CustomDelegate
 extension SearchViewController: CustomDelegate {
-    func didTapAddButton(success: Bool) {
-        if success {
-            let alert = UIAlertController(title: "성공!", message: "담기를 완료했습니다.", preferredStyle: .alert)
+    func didFinishedAddBook(was success: Bool) {
+            let alert = UIAlertController(title: success ? "성공!" : "실패",
+                                          message: success ? "담기를 완료했습니다." : "같은 책이 이미 담겨 있습니다.",
+                                          preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .cancel))
             self.present(alert, animated: true)
-        } else {
-            let alert = UIAlertController(title: "실패", message: "같은 책이 이미 담겨 있습니다.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
-            self.present(alert, animated: true)
-        }
     }
 }
 

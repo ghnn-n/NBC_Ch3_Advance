@@ -15,7 +15,7 @@ class DetailViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewModel: MainViewModel
     private var bookData: Book?
-    private var thumnailImage: UIImage?
+    private var thumbnailImage: UIImage?
     
     var delegate: CustomDelegate?
     
@@ -146,7 +146,7 @@ extension DetailViewController {
             DispatchQueue.main.async {
                 self.titleLabel.text = data.title
                 self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
-                self.imageView.image = self.thumnailImage
+                self.imageView.image = self.thumbnailImage
                 self.priceLabel.text = "\(data.price)원"
                 self.detailLabel.text = data.contents
             }
@@ -157,7 +157,7 @@ extension DetailViewController {
     private func getImage(url: String) {
         viewModel.getImage(url: url)
             .subscribe(onSuccess: { observer in
-                self.thumnailImage = observer
+                self.thumbnailImage = observer
             }, onFailure: { error in
                 print("DetailVC.getImage() failed: \(error)")
             }).disposed(by: disposeBag)
@@ -167,20 +167,20 @@ extension DetailViewController {
     @objc private func buttonTapped(_ sender: UIButton) {
         if sender == self.addButton {
             guard let bookData else { return }
-            var isSuccess = true
+            var wasAdded = true
             
             do {
                 try FavoriteBookManager.shared.create(data: bookData)
             } catch CoreDataError.haveSameBook {
                 print("같은 책이 있음")
-                isSuccess = false
+                wasAdded = false
             } catch {
                 print("unknownError\(error)")
-                isSuccess = false
+                wasAdded = false
             }
             
             self.dismiss(animated: true) {
-                self.delegate?.didTapAddButton(success: isSuccess)
+                self.delegate?.didFinishedAddBook(was: wasAdded)
             }
         } else {
             self.dismiss(animated: true)
