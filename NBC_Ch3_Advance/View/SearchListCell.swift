@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class SearchListCell: UICollectionViewCell {
+class SearchListCell: UICollectionViewListCell {
     
     // MARK: - Property
     static let identifier = "SearchListCell"
@@ -70,6 +70,7 @@ class SearchListCell: UICollectionViewCell {
         contentView.backgroundColor = .white
         contentView.layer.borderColor = UIColor.black.cgColor
         contentView.layer.borderWidth = 0.3
+        contentView.layer.cornerRadius = 8
         
         titleLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()

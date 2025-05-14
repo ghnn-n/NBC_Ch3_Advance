@@ -46,13 +46,9 @@ class MyBookViewController: UIViewController {
     }()
     
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 0
-        layout.itemSize = CGSize(width: view.frame.width - horizontalEdgesInset * 2, height: 60)
-        
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout())
         collectionView.register(SearchListCell.self, forCellWithReuseIdentifier: SearchListCell.identifier)
+        
         collectionView.dataSource = self
         collectionView.delegate = self
         
@@ -91,6 +87,33 @@ extension MyBookViewController {
         } else {
             self.tabBarController?.selectedIndex = 0
         }
+    }
+    
+    private func collectionViewLayout() -> UICollectionViewCompositionalLayout {
+        let layout = UICollectionViewCompositionalLayout { _, environment in
+            var config = UICollectionLayoutListConfiguration(appearance: .plain)
+            config.headerMode = .supplementary
+            
+            config.trailingSwipeActionsConfigurationProvider = { indexPath in
+                let deleteAction = UIContextualAction(style: .normal, title: "Delete") { _, _, completion in
+                    FavoriteBookManager.shared.deleteOne(item: self.favoriteBookData[indexPath.row].isbn)
+                    self.favoriteBookData = FavoriteBookManager.shared.fetch()
+                    self.collectionView.reloadData()
+                    completion(true)
+                }
+                
+                deleteAction.backgroundColor = .red
+                
+                return UISwipeActionsConfiguration(actions: [deleteAction])
+            }
+            
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            section.interGroupSpacing = 5
+            
+            return section
+        }
+        
+        return layout
     }
     
     private func setupUI() {

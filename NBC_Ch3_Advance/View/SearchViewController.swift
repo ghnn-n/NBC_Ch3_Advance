@@ -48,6 +48,8 @@ extension SearchViewController {
         self.navigationController?.navigationBar.isHidden = true
         setupUI()
         bind()
+        // 테스트용
+        viewModel.searching(search: "물 만난")
     }
     
 }
@@ -79,15 +81,15 @@ extension SearchViewController {
             guard let section = Section(rawValue: sectionIndex) else { return nil }
             
             switch section {
-            case .history: return self.historyCollectionViewLayout()
-            case .search: return self.searchCollectionViewLayout()
+            case .history: return self.historySectionLayout()
+            case .search: return self.searchSectionLayout(environment: environment)
             }
         }
         
         return layout
     }
     
-    private func historyCollectionViewLayout() -> NSCollectionLayoutSection {
+    private func historySectionLayout() -> NSCollectionLayoutSection {
         let itemwidth = self.searchListCollectionView.bounds.width / 5
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemwidth),
@@ -119,15 +121,11 @@ extension SearchViewController {
         return section
     }
     
-    private func searchCollectionViewLayout() -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                              heightDimension: .fractionalHeight(1.0))
-        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+    private func searchSectionLayout(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        var config = UICollectionLayoutListConfiguration(appearance: .grouped)
+        config.headerMode = .supplementary
         
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .absolute(60))
-        let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
-        let section = NSCollectionLayoutSection(group: group)
+        let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
         section.interGroupSpacing = 5
         
         let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
