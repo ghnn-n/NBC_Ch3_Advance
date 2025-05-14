@@ -86,6 +86,12 @@ extension MyBookViewController {
             self.collectionView.reloadData()
         } else {
             self.tabBarController?.selectedIndex = 0
+            
+            if let nav = self.tabBarController?.viewControllers?.first as? UINavigationController,
+               let searchVC = nav.viewControllers[0] as? SearchViewController {
+                searchVC.searchBar.becomeFirstResponder()
+            }
+            
         }
     }
     

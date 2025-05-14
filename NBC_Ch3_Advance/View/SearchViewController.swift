@@ -17,7 +17,7 @@ class SearchViewController: UIViewController {
     private let viewModel = MainViewModel()
     private var searchData = [Book]()
         
-    private lazy var searchBar: UISearchBar = {
+    lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = "검색할 책 제목"
         searchBar.searchTextField.addTarget(self, action: #selector(getSearch), for: .primaryActionTriggered)
@@ -147,6 +147,10 @@ extension SearchViewController {
         [searchBar, searchListCollectionView]
             .forEach { view.addSubview($0) }
         
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeKeyboard))
+        view.addGestureRecognizer(tapGesture)
+        tapGesture.cancelsTouchesInView = false
+        
         searchBar.snp.makeConstraints {
             $0.height.equalTo(40)
             $0.leading.trailing.equalToSuperview().inset(12)
@@ -159,6 +163,10 @@ extension SearchViewController {
             $0.leading.trailing.equalToSuperview().inset(16)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
+    }
+    
+    @objc private func closeKeyboard() {
+        view.endEditing(true)
     }
     
 }
