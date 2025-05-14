@@ -35,7 +35,7 @@ class FavoriteBookManager {
         
         newBook.setValue(data.title, forKey: FavoriteBook.Key.title)
         newBook.setValue(authors, forKey: FavoriteBook.Key.authors)
-        newBook.setValue(data.thumbnail, forKey: FavoriteBook.Key.thumnail)
+        newBook.setValue(data.thumbnail, forKey: FavoriteBook.Key.thumbnail)
         newBook.setValue(data.price, forKey: FavoriteBook.Key.price)
         newBook.setValue(data.contents, forKey: FavoriteBook.Key.contents)
         newBook.setValue(data.isbn, forKey: FavoriteBook.Key.isbn)
@@ -54,6 +54,21 @@ class FavoriteBookManager {
         } catch {
             print(CoreDataError.fetchFailed)
             return [FavoriteBook]()
+        }
+    }
+    
+    func deleteAll() {
+        do {
+            let fetch = try self.container.viewContext.fetch(FavoriteBook.fetchRequest())
+            
+            for data in fetch as [NSManagedObject] {
+                self.container.viewContext.delete(data)
+            }
+            
+            try self.container.viewContext.save()
+        } catch {
+            print(CoreDataError.deleteFailed)
+            return
         }
     }
     
@@ -76,5 +91,5 @@ class FavoriteBookManager {
 }
 
 enum CoreDataError: Error {
-    case saveFailed, fetchFailed, haveSameBook
+    case saveFailed, fetchFailed, haveSameBook, deleteFailed
 }

@@ -2,7 +2,7 @@
 //  FavoriteBook+CoreDataProperties.swift
 //  NBC_Ch3_Advance
 //
-//  Created by 최규현 on 5/13/25.
+//  Created by 최규현 on 5/14/25.
 //
 //
 
@@ -20,7 +20,7 @@ extension FavoriteBook {
     @NSManaged public var price: Int64
     @NSManaged public var authors: String?
     @NSManaged public var contents: String?
-    @NSManaged public var thumnail: String?
+    @NSManaged public var thumbnail: String?
     @NSManaged public var isbn: String?
 
 }

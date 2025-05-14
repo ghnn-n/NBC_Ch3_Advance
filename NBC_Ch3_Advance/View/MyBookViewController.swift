@@ -16,7 +16,7 @@ class MyBookViewController: UIViewController {
     private let viewModel = MainViewModel()
     private var favoriteBookData = [FavoriteBook]()
         
-    private lazy var deleteButton: UIButton = {
+    private lazy var deleteAllButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
@@ -73,7 +73,7 @@ extension MyBookViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
         self.favoriteBookData = FavoriteBookManager.shared.fetch()
         self.collectionView.reloadData()
     }
@@ -84,8 +84,10 @@ extension MyBookViewController {
 extension MyBookViewController {
     
     @objc private func buttonTapped(_ sender: UIButton) {
-        if sender == self.deleteButton {
-            
+        if sender == self.deleteAllButton {
+            FavoriteBookManager.shared.deleteAll()
+            self.favoriteBookData = FavoriteBookManager.shared.fetch()
+            self.collectionView.reloadData()
         } else {
             self.tabBarController?.selectedIndex = 0
         }
@@ -94,7 +96,7 @@ extension MyBookViewController {
     private func setupUI() {
         view.backgroundColor = .white
         
-        [titleLabel, deleteButton, addButton, collectionView].forEach {
+        [titleLabel, deleteAllButton, addButton, collectionView].forEach {
             view.addSubview($0)
         }
         
@@ -103,7 +105,7 @@ extension MyBookViewController {
             $0.centerX.equalToSuperview()
         }
         
-        deleteButton.snp.makeConstraints {
+        deleteAllButton.snp.makeConstraints {
             $0.centerY.equalTo(titleLabel)
             $0.leading.equalToSuperview().inset(40)
         }
@@ -123,16 +125,12 @@ extension MyBookViewController {
 
 // MARK: - CustomDelegate
 extension MyBookViewController: CustomDelegate {
-    func didTapAddButton(success: Bool) {
-        if success {
-            let alert = UIAlertController(title: "성공!", message: "담기를 완료했습니다.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
-            present(alert, animated: true)
-        } else {
-            let alert = UIAlertController(title: "실패", message: "같은 책이 이미 담겨 있습니다.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .cancel))
-            present(alert, animated: true)
-        }
+    func didFinishedAddBook(was success: Bool) {
+        let alert = UIAlertController(title: success ? "성공!" : "실패",
+                                      message: success ? "담기를 완료했습니다." : "같은 책이 이미 담겨 있습니다.",
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .cancel))
+        self.present(alert, animated: true)
     }
 }
 

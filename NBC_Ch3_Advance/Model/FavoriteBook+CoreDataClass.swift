@@ -18,6 +18,6 @@ public class FavoriteBook: NSManagedObject {
         static let isbn = "isbn"
         static let price = "price"
         static let contents = "contents"
-        static let thumnail = "thumnail"
+        static let thumbnail = "thumbnail"
     }
 }

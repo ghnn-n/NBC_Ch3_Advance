@@ -8,5 +8,5 @@
 import UIKit
 
 protocol CustomDelegate: UIViewController {
-    func didTapAddButton(success: Bool)
+    func didFinishedAddBook(was success: Bool)
 }
