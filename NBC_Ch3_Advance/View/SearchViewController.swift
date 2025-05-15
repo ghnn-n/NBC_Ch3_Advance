@@ -81,7 +81,7 @@ extension SearchViewController {
             print("데이터 삭제")
             guard let text = sender.text else { return }
             self.searchedText = text
-            Thread.sleep(forTimeInterval: 1.0)
+//            Thread.sleep(forTimeInterval: 1.0)
             viewModel.searching(search: searchedText, isNewSearch: true)
         }
     }
@@ -223,7 +223,7 @@ extension SearchViewController: UICollectionViewDelegate {
         let fullHeight = scrollView.contentSize.height
         let frameHeight = scrollView.frame.height
         
-        if nowY > fullHeight - frameHeight {
+        if nowY > fullHeight - frameHeight - 10 { // 오차 10
             viewModel.searching(search: self.searchedText, isNewSearch: false)
         }
     }
