@@ -113,16 +113,6 @@ extension DetailViewController {
         bind()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        if self.delegate == MyBookViewController() {
-            self.addButton.isEnabled = false
-        } else {
-            self.addButton.isEnabled = true
-        }
-    }
-    
 }
 
 // MARK: - Method
@@ -131,6 +121,7 @@ extension DetailViewController {
     private func bind() {
         self.viewModel.output
             .subscribe(onNext: { observer in
+                self.viewModel.detailInput(data: observer.first)
                 self.titleLabel.text = observer.first?.title
                 self.priceLabel.text = "\(observer.first?.price ?? 0)원"
                 self.detailLabel.text = observer.first?.contents
@@ -144,6 +135,7 @@ extension DetailViewController {
             }).disposed(by: disposeBag)
         
         self.viewModel.imageOutput
+            .observe(on: MainScheduler())
             .subscribe(onNext: { image in
                 self.imageView.image = image
             }).disposed(by: disposeBag)
@@ -151,21 +143,10 @@ extension DetailViewController {
     
     @objc private func buttonTapped(_ sender: UIButton) {
         if sender == self.addButton {
-            guard let bookData = self.viewModel.output.value.first else { return }
-            var wasAdded = true
-            
-            do {
-                try FavoriteBookManager.shared.create(data: bookData)
-            } catch CoreDataError.haveSameBook {
-                print("같은 책이 있음")
-                wasAdded = false
-            } catch {
-                print("unknownError\(error)")
-                wasAdded = false
-            }
+            let didAdded = self.viewModel.addCartButtonTapped()
             
             self.dismiss(animated: true) {
-                self.delegate?.didFinishedAddBook(was: wasAdded)
+                self.delegate?.didFinishedAddBook(was: didAdded)
             }
         } else {
             self.dismiss(animated: true)

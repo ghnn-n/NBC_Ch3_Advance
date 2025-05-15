@@ -33,11 +33,28 @@ class MainViewModel {
     init() {
         input.subscribe(onNext: { data in
             self.output.accept(data)
-            self.detailInput(data: data.first)
         }).disposed(by: disposeBag)
     }
     
     // MARK: - Method
+    func addCartButtonTapped() -> Bool {
+        guard let bookData = self.output.value.first else { return false }
+        var didAdded: Bool
+        
+        do {
+            try FavoriteBookManager.shared.create(data: bookData)
+            didAdded = true
+        } catch CoreDataError.haveSameBook {
+            print("같은 책이 있음")
+            didAdded = false
+        } catch {
+            print("unknownError\(error)")
+            didAdded = false
+        }
+        
+        return didAdded
+    }
+    
     func detailInput(data: Book?) {
         guard let data else {
             print("DetailVC.getData(): noDATA")
