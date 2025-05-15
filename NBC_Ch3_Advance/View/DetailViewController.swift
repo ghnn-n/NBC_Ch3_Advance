@@ -121,7 +121,7 @@ extension DetailViewController {
     private func bind() {
         self.viewModel.output
             .subscribe(onNext: { observer in
-                self.viewModel.detailInput(data: observer.first)
+                self.viewModel.detailInput()
                 self.titleLabel.text = observer.first?.title
                 self.priceLabel.text = "\(observer.first?.price ?? 0)원"
                 self.detailLabel.text = observer.first?.contents

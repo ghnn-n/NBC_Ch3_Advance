@@ -74,8 +74,8 @@ class MainViewModel {
         return didAdded
     }
     
-    func detailInput(data: Book?) {
-        guard let data else {
+    func detailInput() {
+        guard let data = self.output.value.first else {
             print("DetailVC.getData(): noDATA")
             return
         }
@@ -91,6 +91,23 @@ class MainViewModel {
         
         return authors
         
+    }
+    
+    func getImage(url: String) {
+        guard let url = URL(string: url) else {
+            print("ViewModel.getImage Error: \(NetworkError.invalidURL)")
+            return
+        }
+        
+        let session = URLSession(configuration: .default)
+        session.dataTask(with: URLRequest(url: url)) { [weak self] data, _, _ in
+            guard let self, let data, let image = UIImage(data: data) else {
+                print("ViewModel.getImage Error: \(NetworkError.noData)")
+                return
+            }
+            
+            self.imageOutput.accept(image)
+        }.resume()
     }
     
     func historyInput(indexPath: IndexPath) {
@@ -138,23 +155,6 @@ class MainViewModel {
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)
         
-    }
-    
-    func getImage(url: String) {
-        guard let url = URL(string: url) else {
-            print("ViewModel.getImage Error: \(NetworkError.invalidURL)")
-            return
-        }
-        
-        let session = URLSession(configuration: .default)
-        session.dataTask(with: URLRequest(url: url)) { [weak self] data, _, _ in
-            guard let self, let data, let image = UIImage(data: data) else {
-                print("ViewModel.getImage Error: \(NetworkError.noData)")
-                return
-            }
-            
-            self.imageOutput.accept(image)
-        }.resume()
     }
     
 }
