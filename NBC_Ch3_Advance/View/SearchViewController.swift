@@ -15,9 +15,6 @@ class SearchViewController: UIViewController {
     // MARK: - Property
     private let disposeBag = DisposeBag()
     private let viewModel = MainViewModel()
-    private var searchData = [Book]()
-    private var historyData = [Book]()
-    private var searchedText = ""
         
     lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
@@ -51,8 +48,7 @@ extension SearchViewController {
         setupUI()
         bind()
         // 테스트용
-        self.searchedText = "물 만난"
-        viewModel.searching(search: self.searchedText, isNewSearch: true)
+        viewModel.searching(search: "물 만난", isNewSearch: true)
     }
     
 }
@@ -61,10 +57,9 @@ extension SearchViewController {
 extension SearchViewController {
     
     private func bind() {
-        viewModel.searchData
+        viewModel.searchOutput
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { data in
-                self.searchData.append(contentsOf: data)
                 self.searchListCollectionView.reloadData()
                 print("데이터 받아옴")
             }, onError: { error in
@@ -76,13 +71,9 @@ extension SearchViewController {
         DispatchQueue.global(qos: .default).sync {
             self.searchListCollectionView.scrollsToTop = true
             view.endEditing(true)
-            self.searchData.removeAll()
-            self.searchListCollectionView.reloadData()
-            print("데이터 삭제")
+            
             guard let text = sender.text else { return }
-            self.searchedText = text
-//            Thread.sleep(forTimeInterval: 1.0)
-            viewModel.searching(search: searchedText, isNewSearch: true)
+            viewModel.searching(search: text, isNewSearch: true)
         }
     }
     
@@ -119,7 +110,7 @@ extension SearchViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous
         
-        if !self.historyData.isEmpty {
+        if !self.viewModel.historyOutput.value.isEmpty {
             let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                                     heightDimension: .absolute(50))
             let header = NSCollectionLayoutBoundarySupplementaryItem(
@@ -182,12 +173,6 @@ extension SearchViewController {
         view.endEditing(true)
     }
     
-    private func addHistory(indexPath: IndexPath) {
-        if historyData.count >= 10 { historyData.removeLast() }
-        
-        historyData.insert(searchData[indexPath.row], at: 0)
-    }
-    
 }
 
 // MARK: - CustomDelegate
@@ -204,14 +189,18 @@ extension SearchViewController: CustomDelegate {
 // MARK: - CollectionViewDelegate
 extension SearchViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        let searchData = self.viewModel.searchOutput.value
+        let historyData = self.viewModel.historyOutput.value
+        
         switch Section(rawValue: indexPath.section) {
         case .history:
-            self.viewModel.input.onNext(self.historyData[indexPath.row])
+            self.viewModel.input.onNext([historyData[indexPath.row]])
             self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .search:
-            self.addHistory(indexPath: indexPath)
+            self.viewModel.historyInput(indexPath: indexPath)
             self.searchListCollectionView.reloadData()
-            self.viewModel.input.onNext(self.searchData[indexPath.row])
+            self.viewModel.input.onNext([searchData[indexPath.row]])
             self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .none:
             return
@@ -224,7 +213,7 @@ extension SearchViewController: UICollectionViewDelegate {
         let frameHeight = scrollView.frame.height
         
         if nowY > fullHeight - frameHeight - 10 { // 오차 10
-            viewModel.searching(search: self.searchedText, isNewSearch: false)
+            viewModel.searching(search: "", isNewSearch: false)
         }
     }
 }
@@ -247,8 +236,8 @@ extension SearchViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
-        case .history: return self.historyData.count
-        case .search: return self.searchData.count
+        case .history: return self.viewModel.historyOutput.value.count
+        case .search: return self.viewModel.searchOutput.value.count
         case .none: return 0
         }
     }
@@ -259,18 +248,23 @@ extension SearchViewController: UICollectionViewDataSource {
         case .history:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else { return UICollectionViewCell() }
             
-            cell.historySetText(title: self.historyData[indexPath.row].title)
+            let historyData = self.viewModel.historyOutput.value
+            
+            cell.historySetText(title: historyData[indexPath.row].title)
             
             return cell
             
         case .search:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
-            var author = self.searchData[indexPath.row].authors
+            
+            let searchData = self.viewModel.searchOutput.value
+            
+            var author = searchData[indexPath.row].authors
             if author.isEmpty { author = ["unknown"] }
             
-            cell.searchSetText(title: self.searchData[indexPath.row].title,
+            cell.searchSetText(title: searchData[indexPath.row].title,
                                writer: author.count > 1 ? "\(author[0]) 등 \(author.count)인" : author[0],
-                               price: self.searchData[indexPath.row].price)
+                               price: searchData[indexPath.row].price)
             
             return cell
             

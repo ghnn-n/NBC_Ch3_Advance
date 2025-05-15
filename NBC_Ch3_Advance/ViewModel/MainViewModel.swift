@@ -8,29 +8,124 @@
 import Foundation
 import RxSwift
 import UIKit
+import RxRelay
 
 class MainViewModel {
     
     // MARK: - Property
     private let myAPI = "aa7f9e6d76e6ca95a3590fef4162a8a9"
     private let disposeBag = DisposeBag()
-    var isEnd = false
-    var page = 1
+    private var favoriteBookData = [FavoriteBook]()
+    private var historyData = [Book]()
+    private var searchData = [Book]()
+    private var isEnd = false
+    private var page = 1
+    private var searchText = ""
     
-    let searchData = BehaviorSubject(value: [Book]())
-    let input = BehaviorSubject<Book?>(value: nil)
-    let output: Observable<Book?>
+    let searchOutput = BehaviorRelay(value: [Book]())
+    let historyOutput = BehaviorRelay(value: [Book]())
+    let favoriteOutput = BehaviorRelay(value: [FavoriteBook]())
+    let authorOutput = BehaviorRelay(value: ["unknown"])
+    let imageOutput = BehaviorRelay(value: UIImage())
+    
+    let input = BehaviorSubject(value: [Book]())
+    let output = BehaviorRelay(value: [Book]())
     
     // MARK: - Initialize
     init() {
-        output = input
+        input.subscribe(onNext: { data in
+            self.output.accept(data)
+        }).disposed(by: disposeBag)
     }
     
     // MARK: - Method
+    func fetchFavorite() {
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
+    func deleteOneFavorite(indexPath: IndexPath) {
+        FavoriteBookManager.shared.deleteOne(item: self.favoriteBookData[indexPath.row].isbn)
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
+    func deleteAllFavorite() {
+        FavoriteBookManager.shared.deleteAll()
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
+    func addCartButtonTapped() -> Bool {
+        guard let bookData = self.output.value.first else { return false }
+        var didAdded: Bool
+        
+        do {
+            try FavoriteBookManager.shared.create(data: bookData)
+            didAdded = true
+        } catch CoreDataError.haveSameBook {
+            print("같은 책이 있음")
+            didAdded = false
+        } catch {
+            print("unknownError\(error)")
+            didAdded = false
+        }
+        
+        return didAdded
+    }
+    
+    func detailInput() {
+        guard let data = self.output.value.first else {
+            print("DetailVC.getData(): noDATA")
+            return
+        }
+        
+        self.authorOutput.accept(self.authorFetch(data: data))
+        self.getImage(url: data.thumbnail)
+    }
+    
+    func authorFetch(data: Book) -> [String] {
+        
+        var authors = data.authors
+        if authors.isEmpty { authors = ["unknown"] }
+        
+        return authors
+        
+    }
+    
+    func getImage(url: String) {
+        guard let url = URL(string: url) else {
+            print("ViewModel.getImage Error: \(NetworkError.invalidURL)")
+            return
+        }
+        
+        let session = URLSession(configuration: .default)
+        session.dataTask(with: URLRequest(url: url)) { [weak self] data, _, _ in
+            guard let self, let data, let image = UIImage(data: data) else {
+                print("ViewModel.getImage Error: \(NetworkError.noData)")
+                return
+            }
+            
+            self.imageOutput.accept(image)
+        }.resume()
+    }
+    
+    func historyInput(indexPath: IndexPath) {
+        if self.historyData.count >= 10 {
+            self.historyData.removeLast()
+        }
+        
+        self.historyData.insert(self.searchOutput.value[indexPath.row], at: 0)
+        
+        self.historyOutput.accept(self.historyData)
+    }
+    
     func searching(search: String, isNewSearch: Bool) {
         if isNewSearch {
             self.page = 1
             self.isEnd = false
+            self.searchText = search
+            self.searchData = []
         } else {
             self.page += 1
         }
@@ -38,11 +133,11 @@ class MainViewModel {
         guard !self.isEnd else { return }
         
         var urlComponent = URLComponents(string: "https://dapi.kakao.com/v3/search/book")
-        urlComponent?.queryItems = [URLQueryItem(name: "query", value: search),
+        urlComponent?.queryItems = [URLQueryItem(name: "query", value: searchText),
                                     URLQueryItem(name: "page", value: String(page))]
         
         guard let url = urlComponent?.url else {
-            searchData.onError(NetworkError.invalidURL)
+            print(NetworkError.invalidURL)
             return
         }
         
@@ -51,30 +146,15 @@ class MainViewModel {
         
         NetworkManager.shared.fetchData(request: request)
             .subscribe(onSuccess: { (observer: SearchResponse) in
-                self.searchData.onNext(observer.documents)
+                self.searchData.append(contentsOf: observer.documents)
                 self.isEnd = observer.meta.isEnd
+                
+                self.searchOutput.accept(self.searchData)
+                
             }, onFailure: { error in
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)
         
-    }
-    
-    func getImage(url: String) -> Single<UIImage> {
-        guard let url = URL(string: url) else {
-            return Single.error(NetworkError.invalidURL)
-        }
-        
-        return Single.create { observer in
-            let session = URLSession(configuration: .default)
-            session.dataTask(with: URLRequest(url: url)) { data, _, _ in
-                guard let data, let image = UIImage(data: data) else {
-                    return observer(.failure(NetworkError.noData))
-                }
-                
-                return observer(.success(image))
-            }.resume()
-            return Disposables.create()
-        }
     }
     
 }
