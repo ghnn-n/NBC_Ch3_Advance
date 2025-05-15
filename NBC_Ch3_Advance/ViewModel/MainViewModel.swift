@@ -15,6 +15,7 @@ class MainViewModel {
     // MARK: - Property
     private let myAPI = "aa7f9e6d76e6ca95a3590fef4162a8a9"
     private let disposeBag = DisposeBag()
+    private var favoriteBookData = [FavoriteBook]()
     private var historyData = [Book]()
     private var searchData = [Book]()
     private var isEnd = false
@@ -23,6 +24,7 @@ class MainViewModel {
     
     let searchOutput = BehaviorRelay(value: [Book]())
     let historyOutput = BehaviorRelay(value: [Book]())
+    let favoriteOutput = BehaviorRelay(value: [FavoriteBook]())
     let authorOutput = BehaviorRelay(value: ["unknown"])
     let imageOutput = BehaviorRelay(value: UIImage())
     
@@ -37,6 +39,23 @@ class MainViewModel {
     }
     
     // MARK: - Method
+    func fetchFavorite() {
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
+    func deleteOneFavorite(indexPath: IndexPath) {
+        FavoriteBookManager.shared.deleteOne(item: self.favoriteBookData[indexPath.row].isbn)
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
+    func deleteAllFavorite() {
+        FavoriteBookManager.shared.deleteAll()
+        self.favoriteBookData = FavoriteBookManager.shared.fetch()
+        self.favoriteOutput.accept(self.favoriteBookData)
+    }
+    
     func addCartButtonTapped() -> Bool {
         guard let bookData = self.output.value.first else { return false }
         var didAdded: Bool

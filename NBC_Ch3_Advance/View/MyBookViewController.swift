@@ -14,7 +14,7 @@ class MyBookViewController: UIViewController {
     
     private let horizontalEdgesInset: CGFloat = 20
     private let viewModel = MainViewModel()
-    private var favoriteBookData = [FavoriteBook]()
+    private let disposeBag = DisposeBag()
         
     private lazy var deleteAllButton: UIButton = {
         let button = UIButton()
@@ -65,13 +65,13 @@ extension MyBookViewController {
         
         self.navigationController?.navigationBar.isHidden = true
         setupUI()
+        bind()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.favoriteBookData = FavoriteBookManager.shared.fetch()
-        self.collectionView.reloadData()
+        self.viewModel.fetchFavorite()
     }
     
 }
@@ -79,11 +79,19 @@ extension MyBookViewController {
 // MARK: - Method
 extension MyBookViewController {
     
+    private func bind() {
+        self.viewModel.favoriteOutput
+            .subscribe(onNext: { data in
+                self.collectionView.reloadData()
+            }).disposed(by: disposeBag)
+        
+        
+    }
+    
     @objc private func buttonTapped(_ sender: UIButton) {
         if sender == self.deleteAllButton {
-            FavoriteBookManager.shared.deleteAll()
-            self.favoriteBookData = FavoriteBookManager.shared.fetch()
-            self.collectionView.reloadData()
+            self.viewModel.deleteAllFavorite()
+            
         } else {
             self.tabBarController?.selectedIndex = 0
             
@@ -102,9 +110,7 @@ extension MyBookViewController {
             
             config.trailingSwipeActionsConfigurationProvider = { indexPath in
                 let deleteAction = UIContextualAction(style: .normal, title: "Delete") { _, _, completion in
-                    FavoriteBookManager.shared.deleteOne(item: self.favoriteBookData[indexPath.row].isbn)
-                    self.favoriteBookData = FavoriteBookManager.shared.fetch()
-                    self.collectionView.reloadData()
+                    self.viewModel.deleteOneFavorite(indexPath: indexPath)
                     completion(true)
                 }
                 
@@ -166,7 +172,7 @@ extension MyBookViewController: CustomDelegate {
 // MARK: - CollectionViewDelegate
 extension MyBookViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let book = Book(from: self.favoriteBookData[indexPath.row])
+        let book = Book(from: self.viewModel.favoriteOutput.value[indexPath.row])
         
         viewModel.input.onNext([book])
         self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
@@ -176,15 +182,17 @@ extension MyBookViewController: UICollectionViewDelegate {
 // MARK: - CollectionViewDataSource
 extension MyBookViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return favoriteBookData.count
+        return self.viewModel.favoriteOutput.value.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
         
-        cell.searchSetText(title: self.favoriteBookData[indexPath.row].title ?? "unknown",
-                           writer: self.favoriteBookData[indexPath.row].authors ?? "unknown",
-                           price: Int(self.favoriteBookData[indexPath.row].price))
+        let favoriteData = self.viewModel.favoriteOutput.value[indexPath.row]
+        
+        cell.searchSetText(title: favoriteData.title ?? "unknown",
+                           writer: favoriteData.authors ?? "unknown",
+                           price: Int(favoriteData.price))
         
         return cell
     }
