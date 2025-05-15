@@ -16,8 +16,9 @@ class DetailViewController: UIViewController {
     private let viewModel: MainViewModel
     private var bookData: Book?
     private var thumbnailImage: UIImage?
+    private var authors: [String] = []
     
-    var delegate: CustomDelegate?
+    weak var delegate: CustomDelegate?
     
     private let scrollView = UIScrollView()
     
@@ -136,16 +137,20 @@ extension DetailViewController {
             return
         }
         
-        var author = data.authors
-        if author.isEmpty { author = ["unknown"] }
+        self.authors = data.authors
+        if self.authors.isEmpty { self.authors = ["unknown"] }
         
         // image 생성이 늦길래 이런 식으로 했는데 rxSwift에 더 좋은 방법이 있지 않을까
         DispatchQueue.global(qos: .default).sync {
             self.getImage(url: data.thumbnail)
             
+            if self.thumbnailImage == nil {
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+            
             DispatchQueue.main.async {
                 self.titleLabel.text = data.title
-                self.writerLabel.text = data.authors.count > 1 ? author.joined(separator: ", ") : author[0]
+                self.writerLabel.text = data.authors.count > 1 ? self.authors.joined(separator: ", ") : self.authors[0]
                 self.imageView.image = self.thumbnailImage
                 self.priceLabel.text = "\(data.price)원"
                 self.detailLabel.text = data.contents
