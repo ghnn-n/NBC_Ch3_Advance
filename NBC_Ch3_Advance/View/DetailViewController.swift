@@ -14,9 +14,6 @@ class DetailViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     private let viewModel: MainViewModel
-    private var bookData: Book?
-    private var thumbnailImage: UIImage?
-    private var authors: [String] = []
     
     weak var delegate: CustomDelegate?
     
@@ -134,53 +131,27 @@ extension DetailViewController {
     private func bind() {
         self.viewModel.output
             .subscribe(onNext: { observer in
-                self.bookData = observer[0]
-                self.getData(data: observer[0])
+                self.titleLabel.text = observer.first?.title
+                self.priceLabel.text = "\(observer.first?.price ?? 0)원"
+                self.detailLabel.text = observer.first?.contents
             }, onError: { error in
                 print("DetailVC data load error: \(error)")
             }).disposed(by: disposeBag)
-    }
-    
-    private func getData(data: Book?) {
-        guard let data else {
-            print("DetailVC.getData(): noDATA")
-            return
-        }
         
-        self.authors = data.authors
-        if self.authors.isEmpty { self.authors = ["unknown"] }
+        self.viewModel.authorOutput
+            .subscribe(onNext: { authors in
+                self.writerLabel.text = authors.first
+            }).disposed(by: disposeBag)
         
-        // image 생성이 늦길래 이런 식으로 했는데 rxSwift에 더 좋은 방법이 있지 않을까
-        DispatchQueue.global(qos: .default).sync {
-            self.getImage(url: data.thumbnail)
-            
-            if self.thumbnailImage == nil {
-                Thread.sleep(forTimeInterval: 0.3)
-            }
-            
-            DispatchQueue.main.async {
-                self.titleLabel.text = data.title
-                self.writerLabel.text = data.authors.count > 1 ? self.authors.joined(separator: ", ") : self.authors[0]
-                self.imageView.image = self.thumbnailImage
-                self.priceLabel.text = "\(data.price)원"
-                self.detailLabel.text = data.contents
-            }
-        }
-        
-    }
-    
-    private func getImage(url: String) {
-        viewModel.getImage(url: url)
-            .subscribe(onSuccess: { observer in
-                self.thumbnailImage = observer
-            }, onFailure: { error in
-                print("DetailVC.getImage() failed: \(error)")
+        self.viewModel.imageOutput
+            .subscribe(onNext: { image in
+                self.imageView.image = image
             }).disposed(by: disposeBag)
     }
     
     @objc private func buttonTapped(_ sender: UIButton) {
         if sender == self.addButton {
-            guard let bookData else { return }
+            guard let bookData = self.viewModel.output.value.first else { return }
             var wasAdded = true
             
             do {

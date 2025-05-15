@@ -23,18 +23,44 @@ class MainViewModel {
     
     let searchOutput = BehaviorRelay(value: [Book]())
     let historyOutput = BehaviorRelay(value: [Book]())
+    let authorOutput = BehaviorRelay(value: ["unknown"])
+    let imageOutput = BehaviorRelay(value: UIImage())
     
     let input = BehaviorSubject(value: [Book]())
-    var output: Observable<[Book]>
+    let output = BehaviorRelay(value: [Book]())
     
     // MARK: - Initialize
     init() {
-        output = input
+        input.subscribe(onNext: { data in
+            self.output.accept(data)
+            self.detailInput(data: data.first)
+        }).disposed(by: disposeBag)
     }
     
     // MARK: - Method
+    func detailInput(data: Book?) {
+        guard let data else {
+            print("DetailVC.getData(): noDATA")
+            return
+        }
+        
+        self.authorOutput.accept(self.authorFetch(data: data))
+        self.getImage(url: data.thumbnail)
+    }
+    
+    func authorFetch(data: Book) -> [String] {
+        
+        var authors = data.authors
+        if authors.isEmpty { authors = ["unknown"] }
+        
+        return authors
+        
+    }
+    
     func historyInput(indexPath: IndexPath) {
-        if self.historyData.count >= 10 { self.historyData.removeLast() }
+        if self.historyData.count >= 10 {
+            self.historyData.removeLast()
+        }
         
         self.historyData.insert(self.searchOutput.value[indexPath.row], at: 0)
         
@@ -78,22 +104,21 @@ class MainViewModel {
         
     }
     
-    func getImage(url: String) -> Single<UIImage> {
+    func getImage(url: String) {
         guard let url = URL(string: url) else {
-            return Single.error(NetworkError.invalidURL)
+            print("ViewModel.getImage Error: \(NetworkError.invalidURL)")
+            return
         }
         
-        return Single.create { observer in
-            let session = URLSession(configuration: .default)
-            session.dataTask(with: URLRequest(url: url)) { data, _, _ in
-                guard let data, let image = UIImage(data: data) else {
-                    return observer(.failure(NetworkError.noData))
-                }
-                
-                return observer(.success(image))
-            }.resume()
-            return Disposables.create()
-        }
+        let session = URLSession(configuration: .default)
+        session.dataTask(with: URLRequest(url: url)) { [weak self] data, _, _ in
+            guard let self, let data, let image = UIImage(data: data) else {
+                print("ViewModel.getImage Error: \(NetworkError.noData)")
+                return
+            }
+            
+            self.imageOutput.accept(image)
+        }.resume()
     }
     
 }
