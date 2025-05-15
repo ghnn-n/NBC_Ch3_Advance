@@ -8,18 +8,24 @@
 import Foundation
 import RxSwift
 import UIKit
+import RxRelay
 
 class MainViewModel {
     
     // MARK: - Property
     private let myAPI = "aa7f9e6d76e6ca95a3590fef4162a8a9"
     private let disposeBag = DisposeBag()
-    var isEnd = false
-    var page = 1
+    private var historyData = [Book]()
+    private var searchData = [Book]()
+    private var isEnd = false
+    private var page = 1
+    private var searchText = ""
     
-    let searchData = BehaviorSubject(value: [Book]())
-    let input = BehaviorSubject<Book?>(value: nil)
-    let output: Observable<Book?>
+    let searchOutput = BehaviorRelay(value: [Book]())
+    let historyOutput = BehaviorRelay(value: [Book]())
+    
+    let input = BehaviorSubject(value: [Book]())
+    var output: Observable<[Book]>
     
     // MARK: - Initialize
     init() {
@@ -27,10 +33,20 @@ class MainViewModel {
     }
     
     // MARK: - Method
+    func historyInput(indexPath: IndexPath) {
+        if self.historyData.count >= 10 { self.historyData.removeLast() }
+        
+        self.historyData.insert(self.searchOutput.value[indexPath.row], at: 0)
+        
+        self.historyOutput.accept(self.historyData)
+    }
+    
     func searching(search: String, isNewSearch: Bool) {
         if isNewSearch {
             self.page = 1
             self.isEnd = false
+            self.searchText = search
+            self.searchData = []
         } else {
             self.page += 1
         }
@@ -38,11 +54,11 @@ class MainViewModel {
         guard !self.isEnd else { return }
         
         var urlComponent = URLComponents(string: "https://dapi.kakao.com/v3/search/book")
-        urlComponent?.queryItems = [URLQueryItem(name: "query", value: search),
+        urlComponent?.queryItems = [URLQueryItem(name: "query", value: searchText),
                                     URLQueryItem(name: "page", value: String(page))]
         
         guard let url = urlComponent?.url else {
-            searchData.onError(NetworkError.invalidURL)
+            print(NetworkError.invalidURL)
             return
         }
         
@@ -51,8 +67,11 @@ class MainViewModel {
         
         NetworkManager.shared.fetchData(request: request)
             .subscribe(onSuccess: { (observer: SearchResponse) in
-                self.searchData.onNext(observer.documents)
+                self.searchData.append(contentsOf: observer.documents)
                 self.isEnd = observer.meta.isEnd
+                
+                self.searchOutput.accept(self.searchData)
+                
             }, onFailure: { error in
                 print("MainViewModel.searching error: \(error)")
             }).disposed(by: disposeBag)

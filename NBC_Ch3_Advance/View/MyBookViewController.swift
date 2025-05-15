@@ -166,7 +166,9 @@ extension MyBookViewController: CustomDelegate {
 // MARK: - CollectionViewDelegate
 extension MyBookViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        viewModel.input.onNext(Book(from: self.favoriteBookData[indexPath.row]))
+        let book = Book(from: self.favoriteBookData[indexPath.row])
+        
+        viewModel.input.onNext([book])
         self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
     }
 }

@@ -116,6 +116,16 @@ extension DetailViewController {
         bind()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if self.delegate == MyBookViewController() {
+            self.addButton.isEnabled = false
+        } else {
+            self.addButton.isEnabled = true
+        }
+    }
+    
 }
 
 // MARK: - Method
@@ -124,8 +134,8 @@ extension DetailViewController {
     private func bind() {
         self.viewModel.output
             .subscribe(onNext: { observer in
-                self.bookData = observer
-                self.getData(data: observer)
+                self.bookData = observer[0]
+                self.getData(data: observer[0])
             }, onError: { error in
                 print("DetailVC data load error: \(error)")
             }).disposed(by: disposeBag)
@@ -166,7 +176,6 @@ extension DetailViewController {
             }, onFailure: { error in
                 print("DetailVC.getImage() failed: \(error)")
             }).disposed(by: disposeBag)
-        
     }
     
     @objc private func buttonTapped(_ sender: UIButton) {
