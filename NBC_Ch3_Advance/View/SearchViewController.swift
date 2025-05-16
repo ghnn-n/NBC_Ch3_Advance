@@ -294,7 +294,7 @@ extension SearchViewController: UICollectionViewDataSource {
             let searchData = self.viewModel.searchOutput.value
             
             // 저자 예외처리
-            var author = self.viewModel.authorFetch(data: searchData[indexPath.row])
+            let author = self.viewModel.authorFetch(data: searchData[indexPath.row])
             
             cell.searchSetText(title: searchData[indexPath.row].title,
                                // 저자 예외처리
