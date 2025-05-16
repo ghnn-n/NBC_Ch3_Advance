@@ -149,7 +149,7 @@ extension DetailViewController {
         // 정보 변환이 필요한 데이터의 변환 작업을 거쳐서 내려받음
         self.viewModel.authorOutput
             .subscribe(onNext: { authors in
-                self.writerLabel.text = authors.first
+                self.writerLabel.text = authors.joined(separator: ", ")
             }).disposed(by: disposeBag)
         
         self.viewModel.imageOutput
