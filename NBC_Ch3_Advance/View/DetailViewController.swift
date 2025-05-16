@@ -12,11 +12,14 @@ import SnapKit
 // MARK: - DetailViewController
 class DetailViewController: UIViewController {
     
+    // MARK: - Property
     private let disposeBag = DisposeBag()
     private let viewModel: MainViewModel
     
+    // Delegate 패턴
     weak var delegate: CustomDelegate?
     
+    // MARK: - UI Property
     private let scrollView = UIScrollView()
     
     private let contentView: UIView = {
@@ -61,7 +64,7 @@ class DetailViewController: UIViewController {
     
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12)
+        label.font = .systemFont(ofSize: 16)
         label.textColor = .black
         label.numberOfLines = 0
         
@@ -91,9 +94,9 @@ class DetailViewController: UIViewController {
     }()
     
     // MARK: - Initialize
-    init(viewModel: MainViewModel, delegate: CustomDelegate) {
+    /// 해당 뷰를 호출할 때 필요한 정보를 받아올 수 있도록 설정
+    init(viewModel: MainViewModel) {
         self.viewModel = viewModel
-        self.delegate = delegate
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -113,15 +116,29 @@ extension DetailViewController {
         bind()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.navigationBar.isHidden = true
+        
+        // Delegate가 없으면 버튼을 비활성화
+        if self.delegate == nil {
+            self.addButton.isEnabled = false
+            self.addButton.backgroundColor = .darkGray
+        }
+    }
+    
 }
 
 // MARK: - Method
 extension DetailViewController {
     
+    // ViewModel 바인딩
     private func bind() {
+        
+        // 해당 뷰컨트롤러를 호출할 때 받은 Input에서 나온 Output
         self.viewModel.output
             .subscribe(onNext: { observer in
-                self.viewModel.detailInput()
+                self.viewModel.detailInput() // 정보 변환이 필요한 데이터를 받았다고 호출함
                 self.titleLabel.text = observer.first?.title
                 self.priceLabel.text = "\(observer.first?.price ?? 0)원"
                 self.detailLabel.text = observer.first?.contents
@@ -129,6 +146,7 @@ extension DetailViewController {
                 print("DetailVC data load error: \(error)")
             }).disposed(by: disposeBag)
         
+        // 정보 변환이 필요한 데이터의 변환 작업을 거쳐서 내려받음
         self.viewModel.authorOutput
             .subscribe(onNext: { authors in
                 self.writerLabel.text = authors.first
@@ -141,18 +159,24 @@ extension DetailViewController {
             }).disposed(by: disposeBag)
     }
     
+    // 버튼이 눌렸을 때
     @objc private func buttonTapped(_ sender: UIButton) {
+        
+        // 담기 버튼 클릭 시
         if sender == self.addButton {
             let didAdded = self.viewModel.addCartButtonTapped()
             
             self.dismiss(animated: true) {
                 self.delegate?.didFinishedAddBook(was: didAdded)
             }
+            
+            // X 버튼 클릭 시
         } else {
             self.dismiss(animated: true)
         }
     }
     
+    // UI를 세팅하는 메서드
     private func setupUI() {
         view.backgroundColor = .white
         let buttonHeight: CGFloat = 60

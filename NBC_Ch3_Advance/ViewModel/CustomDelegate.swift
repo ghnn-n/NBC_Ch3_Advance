@@ -7,6 +7,7 @@
 
 import UIKit
 
+// MARK: - CustomDelegate
 protocol CustomDelegate: UIViewController {
     func didFinishedAddBook(was success: Bool)
 }

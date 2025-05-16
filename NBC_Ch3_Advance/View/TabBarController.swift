@@ -28,6 +28,7 @@ extension TabBarController {
 // MARK: - Method
 extension TabBarController {
     
+    // 기본 값 세팅
     private func configure() {
         let font = UIFont.systemFont(ofSize: 20)
         let appearance = UITabBarAppearance()
@@ -46,6 +47,7 @@ extension TabBarController {
         self.tabBar.backgroundColor = .white
     }
     
+    // 탭 바로 연동 가능한 ViewContoller
     private func setVC() {
         
         viewControllers = [
@@ -55,6 +57,7 @@ extension TabBarController {
         
     }
     
+    // UINavigationController 생성 메서드
     private func createVC(VC: UIViewController, title: String) -> UIViewController {
         let nav = UINavigationController(rootViewController: VC)
         nav.tabBarItem.title = title

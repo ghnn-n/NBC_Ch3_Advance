@@ -5,6 +5,7 @@
 //  Created by 최규현 on 5/13/25.
 //
 
+// MARK: - SearchResponse
 struct SearchResponse: Decodable {
     let meta: Meta
     let documents: [Book]
@@ -31,7 +32,10 @@ struct Book: Decodable {
     let isbn: String
 }
 
+// MARK: - Initialize
 extension Book {
+    
+    /// FavoriteBook 타입에서 Book타입으로 타입캐스팅 가능하도록 설정
     init(from favorite: FavoriteBook) {
         guard let title = favorite.title,
               let authors = favorite.authors,

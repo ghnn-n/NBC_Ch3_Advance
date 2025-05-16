@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 
+// MARK: - HistoryCell
 class HistoryCell: UICollectionViewCell {
     
     // MARK: - Property
