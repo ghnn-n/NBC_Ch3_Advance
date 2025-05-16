@@ -35,6 +35,7 @@ class SearchListCell: UICollectionViewListCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 22)
         label.textColor = .black
+        label.textAlignment = .right
         
         return label
     }()
@@ -81,12 +82,13 @@ class SearchListCell: UICollectionViewListCell {
         priceLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
             $0.trailing.equalToSuperview().inset(12)
+            $0.width.equalTo(100)
         }
         
         writerLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
             $0.leading.equalTo(contentView.snp.centerX)
-            $0.trailing.equalTo(contentView.snp.centerX).offset(72)
+            $0.trailing.equalTo(priceLabel.snp.leading).offset(-4)
         }
     }
 }
