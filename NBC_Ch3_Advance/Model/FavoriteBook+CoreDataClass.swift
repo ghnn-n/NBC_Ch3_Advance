@@ -11,6 +11,8 @@ import CoreData
 
 @objc(FavoriteBook)
 public class FavoriteBook: NSManagedObject {
+    
+    // 코어데이터 리팩토링
     public static let entityName: String = "FavoriteBook"
     public enum Key {
         static let title = "title"

@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 
+// MARK: - SearchListCell
 class SearchListCell: UICollectionViewListCell {
     
     // MARK: - Property

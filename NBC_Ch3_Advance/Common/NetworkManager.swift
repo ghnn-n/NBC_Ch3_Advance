@@ -8,12 +8,15 @@
 import Foundation
 import RxSwift
 
+// MARK: - NetworkManager
 class NetworkManager {
     
-    static let shared = NetworkManager()
+    static let shared = NetworkManager() // 싱글톤 패턴
     
     private init() {}
     
+    // MARK: - Method
+    // URL세션으로 데이터를 불러오는 메서드
     func fetchData<T: Decodable>(request: URLRequest) -> Single<T> {
         return Single.create { observer in
             let session = URLSession(configuration: .default)

@@ -15,7 +15,8 @@ class SearchViewController: UIViewController {
     // MARK: - Property
     private let disposeBag = DisposeBag()
     private let viewModel = MainViewModel()
-        
+    
+    // MARK: - UI Property
     lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = "검색할 책 제목"
@@ -44,11 +45,13 @@ extension SearchViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationController?.navigationBar.isHidden = true
         setupUI()
         bind()
-        // 테스트용
-        viewModel.searching(search: "물 만난", isNewSearch: true)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.navigationBar.isHidden = true
     }
     
 }
@@ -56,17 +59,18 @@ extension SearchViewController {
 // MARK: - Method
 extension SearchViewController {
     
+    // ViewModel 바인딩
     private func bind() {
         viewModel.searchOutput
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { data in
                 self.searchListCollectionView.reloadData()
-                print("데이터 받아옴")
             }, onError: { error in
                 print(error)
             }).disposed(by: disposeBag)
     }
     
+    // 서치바에서 리턴 입력 시
     @objc private func getSearch(_ sender: UISearchBar) {
         DispatchQueue.global(qos: .default).sync {
             self.searchListCollectionView.scrollsToTop = true
@@ -77,6 +81,7 @@ extension SearchViewController {
         }
     }
     
+    // 섹션 별 레이아웃 적용
     private func setCollectionViewLayoutForSection() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
             
@@ -91,6 +96,7 @@ extension SearchViewController {
         return layout
     }
     
+    // 최근 본 책 섹션 레이아웃
     private func historySectionLayout() -> NSCollectionLayoutSection {
         let itemwidth = self.searchListCollectionView.bounds.width / 5
         
@@ -110,6 +116,7 @@ extension SearchViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous
         
+        // 최근 본 책이 있을 때만 헤더를 생성
         if !self.viewModel.historyOutput.value.isEmpty {
             let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                                     heightDimension: .absolute(50))
@@ -125,6 +132,7 @@ extension SearchViewController {
         return section
     }
     
+    // 검색 결과 섹션 레이아웃
     private func searchSectionLayout(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
         var config = UICollectionLayoutListConfiguration(appearance: .grouped)
         config.headerMode = .supplementary
@@ -145,6 +153,7 @@ extension SearchViewController {
         return section
     }
     
+    // UI 세팅 메서드
     private func setupUI() {
         view.backgroundColor = .white
         
@@ -169,6 +178,7 @@ extension SearchViewController {
         }
     }
     
+    // 화면 클릭 시 키보드가 내려가도록 설정
     @objc private func closeKeyboard() {
         view.endEditing(true)
     }
@@ -177,6 +187,8 @@ extension SearchViewController {
 
 // MARK: - CustomDelegate
 extension SearchViewController: CustomDelegate {
+    
+    // 디테일 뷰에서 담기 버튼 클릭 시
     func didFinishedAddBook(was success: Bool) {
             let alert = UIAlertController(title: success ? "성공!" : "실패",
                                           message: success ? "담기를 완료했습니다." : "같은 책이 이미 담겨 있습니다.",
@@ -188,31 +200,47 @@ extension SearchViewController: CustomDelegate {
 
 // MARK: - CollectionViewDelegate
 extension SearchViewController: UICollectionViewDelegate {
+    
+    // 셀의 아이템 클릭 시
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        let searchData = self.viewModel.searchOutput.value
+        // 최근 본 책
         let historyData = self.viewModel.historyOutput.value
+        // 검색 결과
+        let searchData = self.viewModel.searchOutput.value
+        
+        // 디테일 뷰로 이동 - ViewModel 넘겨줌, Delegate 설정
+        let detailVC = DetailViewController(viewModel: self.viewModel)
+        detailVC.delegate = self
+        self.present(detailVC, animated: true)
         
         switch Section(rawValue: indexPath.section) {
         case .history:
+            // 디테일 뷰에서 클릭한 셀의 정보를 볼 수 있도록 input을 보냄
             self.viewModel.input.onNext([historyData[indexPath.row]])
-            self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .search:
+            // 최근 본 책에 표시될 수 있도록 historyInput에 기록 추가
             self.viewModel.historyInput(indexPath: indexPath)
             self.searchListCollectionView.reloadData()
+            // 디테일 뷰에서 클릭한 셀의 정보를 볼 수 있도록 input을 보냄
             self.viewModel.input.onNext([searchData[indexPath.row]])
-            self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
         case .none:
             return
         }
     }
     
+    // 스크롤이 멈췄을 때
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        // 현재 위치
         let nowY = scrollView.contentOffset.y
+        // 모든 컨텐츠의 길이
         let fullHeight = scrollView.contentSize.height
+        // 컬렉션 뷰? 스크롤 뷰?의 UI상 높이
         let frameHeight = scrollView.frame.height
         
+        // 현재 위치 > 총 스크롤 가능한 길이에서 컬렉션 뷰 UI의 길이를 뺀 값
         if nowY > fullHeight - frameHeight - 10 { // 오차 10
+            // ViewModel에 새로운 검색이 아니라는 정보와 함께 검색 요청
             viewModel.searching(search: "", isNewSearch: false)
         }
     }
@@ -221,6 +249,7 @@ extension SearchViewController: UICollectionViewDelegate {
 // MARK: - CollectionViewDataSource
 extension SearchViewController: UICollectionViewDataSource {
     
+    // SupplementaryElement
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderView.identifier, for: indexPath) as? HeaderView else { return UICollectionReusableView() }
         
@@ -230,10 +259,12 @@ extension SearchViewController: UICollectionViewDataSource {
         return header
     }
     
+    // 섹션 개수
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return Section.allCases.count
     }
     
+    // 섹션 당 셀의 개수
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch Section(rawValue: section) {
         case .history: return self.viewModel.historyOutput.value.count
@@ -242,12 +273,14 @@ extension SearchViewController: UICollectionViewDataSource {
         }
     }
     
+    // 셀 표시 내용
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         switch Section(rawValue: indexPath.section) {
         case .history:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else { return UICollectionViewCell() }
             
+            // 최근 본 책
             let historyData = self.viewModel.historyOutput.value
             
             cell.historySetText(title: historyData[indexPath.row].title)
@@ -257,12 +290,14 @@ extension SearchViewController: UICollectionViewDataSource {
         case .search:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchListCell.identifier, for: indexPath) as? SearchListCell else { return UICollectionViewCell() }
             
+            // 검색 결과
             let searchData = self.viewModel.searchOutput.value
             
-            var author = searchData[indexPath.row].authors
-            if author.isEmpty { author = ["unknown"] }
+            // 저자 예외처리
+            var author = self.viewModel.authorFetch(data: searchData[indexPath.row])
             
             cell.searchSetText(title: searchData[indexPath.row].title,
+                               // 저자 예외처리
                                writer: author.count > 1 ? "\(author[0]) 등 \(author.count)인" : author[0],
                                price: searchData[indexPath.row].price)
             

@@ -8,8 +8,9 @@
 import UIKit
 import CoreData
 
+// MARK: - FavoriteBookManager
 class FavoriteBookManager {
-    static let shared = FavoriteBookManager()
+    static let shared = FavoriteBookManager() // 싱글톤 패턴
     
     private var container: NSPersistentContainer!
     
@@ -18,7 +19,11 @@ class FavoriteBookManager {
         self.container = appDelegate.persistentContainer
     }
     
+    // MARK: - Method
+    // 코어데이터 저장
     func create(data: Book) throws {
+        // 중복 컨텐츠 확인
+        // 중복 컨텐츠면 throw
         guard checkSameContent(data: data) else { throw CoreDataError.haveSameBook }
         
         guard let entity = NSEntityDescription.entity(forEntityName: FavoriteBook.entityName, in: self.container.viewContext) else { return }
@@ -48,6 +53,7 @@ class FavoriteBookManager {
         }
     }
     
+    // 패치
     func fetch() -> [FavoriteBook] {
         do {
             return try self.container.viewContext.fetch(FavoriteBook.fetchRequest())
@@ -57,6 +63,7 @@ class FavoriteBookManager {
         }
     }
     
+    // 하나씩 삭제
     func deleteOne(item: String?) {
         guard let item else { return }
         
@@ -77,6 +84,7 @@ class FavoriteBookManager {
         }
     }
     
+    // 전체 삭제
     func deleteAll() {
         do {
             let fetch = try self.container.viewContext.fetch(FavoriteBook.fetchRequest())
@@ -92,6 +100,7 @@ class FavoriteBookManager {
         }
     }
     
+    // 추가할 때 중복된 컨텐츠가 있는지 확인
     private func checkSameContent(data: Book) -> Bool {
         do {
             let fetch = try self.container.viewContext.fetch(FavoriteBook.fetchRequest())

@@ -12,10 +12,12 @@ import SnapKit
 // MARK: - MyBookViewController
 class MyBookViewController: UIViewController {
     
+    // MARK: - Property
     private let horizontalEdgesInset: CGFloat = 20
     private let viewModel = MainViewModel()
     private let disposeBag = DisposeBag()
-        
+    
+    // MARK: - UI Property
     private lazy var deleteAllButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = .systemFont(ofSize: 16)
@@ -63,13 +65,13 @@ extension MyBookViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationController?.navigationBar.isHidden = true
         setupUI()
         bind()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.navigationController?.navigationBar.isHidden = true
         
         self.viewModel.fetchFavorite()
     }
@@ -79,19 +81,22 @@ extension MyBookViewController {
 // MARK: - Method
 extension MyBookViewController {
     
+    // ViewModel 바인딩
     private func bind() {
         self.viewModel.favoriteOutput
             .subscribe(onNext: { data in
                 self.collectionView.reloadData()
             }).disposed(by: disposeBag)
-        
-        
     }
     
+    // 버튼 클릭
     @objc private func buttonTapped(_ sender: UIButton) {
+        
+        // 전체 삭제 버튼
         if sender == self.deleteAllButton {
             self.viewModel.deleteAllFavorite()
             
+            // 추가 버튼
         } else {
             self.tabBarController?.selectedIndex = 0
             
@@ -103,11 +108,13 @@ extension MyBookViewController {
         }
     }
     
+    // 컬렉션 뷰 레이아웃
     private func collectionViewLayout() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { _, environment in
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.headerMode = .supplementary
             
+            // 스와이프 액션
             config.trailingSwipeActionsConfigurationProvider = { indexPath in
                 let deleteAction = UIContextualAction(style: .normal, title: "Delete") { _, _, completion in
                     self.viewModel.deleteOneFavorite(indexPath: indexPath)
@@ -128,6 +135,7 @@ extension MyBookViewController {
         return layout
     }
     
+    // UI 세팅 메서드
     private func setupUI() {
         view.backgroundColor = .white
         
@@ -158,24 +166,13 @@ extension MyBookViewController {
     }
 }
 
-// MARK: - CustomDelegate
-extension MyBookViewController: CustomDelegate {
-    func didFinishedAddBook(was success: Bool) {
-        let alert = UIAlertController(title: success ? "성공!" : "실패",
-                                      message: success ? "담기를 완료했습니다." : "같은 책이 이미 담겨 있습니다.",
-                                      preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .cancel))
-        self.present(alert, animated: true)
-    }
-}
-
 // MARK: - CollectionViewDelegate
 extension MyBookViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let book = Book(from: self.viewModel.favoriteOutput.value[indexPath.row])
         
         viewModel.input.onNext([book])
-        self.present(DetailViewController(viewModel: self.viewModel, delegate: self), animated: true)
+        self.present(DetailViewController(viewModel: self.viewModel), animated: true)
     }
 }
 
